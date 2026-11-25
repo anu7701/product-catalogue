@@ -221,7 +221,7 @@ THEN the page content loads normally
   | Page | Address pattern | Example |
   |---|---|---|
   | Home | `/` | `/` |
-  | Category | `/category/{category name}` | `/category/men's%20clothing` |
+  | Category | `/category/{category id}` (a UUID, T15) | `/category/6f1c2b9e-3d4a-5e8f-9a0b-1c2d3e4f5a6b` |
   | Search results | `/search?q={term}` | `/search?q=backpack` |
   | Product | `/product/{product id}` | `/product/1` |
 
@@ -366,7 +366,7 @@ AND I can still see and use the category links and search
 
 **Functional requirements**
 - HOM-02.FR1 Show a "Shop by category" section with one link per category.
-- HOM-02.FR2 Each link goes to `/category/{category name}`.
+- HOM-02.FR2 Each link goes to `/category/{category id}`.
 
 **Edge cases**
 - Zero categories → section hidden.
@@ -458,34 +458,41 @@ AND no product from another category appears
 **Preconditions:** Customer opens a category address that does not exist.
 
 **User workflow**
-1. Customer opens `/category/shoes` (hand-typed) or an old bookmark after categories changed.
+1. Customer opens a category address whose ID matches no category: an edited/mistyped URL, or an old bookmark after the data source renamed or removed the category (the ID is derived from the name, T15).
 2. Page shows "We couldn't find that category." plus links to all existing categories and to home.
 
 **Business rules**
 - BR1. Cannot occur through normal clicking; occurs via edited/typed URLs or stale bookmarks/links after data source changes [A11].
 - BR2. Show a friendly not-found state with links to real categories — never an error page or an empty product list [A11].
-- BR3. Category matching is exact on the category name, but case-insensitive [NEW-23] (e.g. `/category/Electronics` works).
+- BR3. Category IDs are UUIDs and are matched exactly; hex letters are compared case-insensitively, as UUIDs are case-insensitive [NEW-23, T15].
 
 **Functional requirements**
 - CAT-02.FR1 Detect that the requested category is not among the data source's categories.
 - CAT-02.FR2 Show the not-found message, the list of existing categories and a link to home.
 
 **Edge cases**
-- Near-miss name (`/category/jewelry` vs actual `jewelery`) → not found (no fuzzy matching) [NEW-23].
-- Empty category name (`/category/`) → treated as unknown path (GLB-04.FR4).
+- Not a UUID at all (e.g. `/category/shoes`) → category not found (not an error page).
+- Well-formed UUID that matches no category → category not found.
+- Same UUID in upper case → same category page.
+- Data source renames a category (e.g. `jewelery` → `jewelry`) → its ID changes; old links show category not found. Accepted (A11).
+- Empty category ID (`/category/`) → treated as unknown path (GLB-04.FR4).
 
 **Error scenarios**
 - Data source unavailable → error state (GLB-03), **not** "category not found" (we cannot know it doesn't exist).
 
 **Acceptance criteria**
 ```
-GIVEN no category called "shoes" exists
-WHEN I open "/category/shoes"
+GIVEN no category has the ID "00000000-0000-5000-8000-000000000000"
+WHEN I open "/category/00000000-0000-5000-8000-000000000000"
 THEN I see "We couldn't find that category."
 AND I see links to all existing categories
 
+GIVEN I open "/category/shoes"
+WHEN the page loads
+THEN I see "We couldn't find that category." (not an error page)
+
 GIVEN the product data source is unavailable
-WHEN I open "/category/electronics"
+WHEN I open the Electronics category page
 THEN I see the error state with "Try again"
 AND I do not see "We couldn't find that category."
 ```
@@ -657,7 +664,7 @@ AND I see links back to the home page and the categories
 **Functional requirements**
 - PRD-01.FR1 Retrieve the product by ID via the backend.
 - PRD-01.FR2 Display all fields in BR2; full description (no truncation).
-- PRD-01.FR3 Category is a link to `/category/{category}`.
+- PRD-01.FR3 Category is a link to `/category/{category id}`.
 - PRD-01.FR4 Show an **Enquire** button, visible without scrolling [NEW-28].
 - PRD-01.FR5 Page title (browser tab) includes the product title [NEW-29].
 
