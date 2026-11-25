@@ -21,9 +21,12 @@ export interface Rating {
 }
 
 /**
- * Opaque category identifier, used in URLs as `/category/{id}` (GLB-04).
- * Like ProductId, never parse it or assume a format; how it is derived from
- * the data source is open (SPEC_REVIEW R-09).
+ * Category identifier: a UUID, used in URLs as `/category/{id}` (GLB-04).
+ *
+ * The data source has no category IDs, only names, so the API derives the ID
+ * deterministically (UUID v5 of the source category name in a fixed namespace,
+ * T15). The same category always gets the same ID across restarts and servers,
+ * so links and bookmarks keep working. Treat it as opaque outside the API.
  */
 export type CategoryId = string;
 

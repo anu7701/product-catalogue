@@ -12,6 +12,7 @@
 | R-02 | **Resolved differently** — caching removed from the architecture for now (ARCH §3.5, T4), so the cache/spec contradictions no longer apply. Caching is a next step. |
 | R-03 | **Resolved** — `/products?q=` and `/featured-products` (ARCH §6.2, T14). |
 | R-04 | **Deferred** — to be decided later; NEW-21 marked under review. |
+| R-09 | **Partly resolved** — category ID is a deterministic UUID v5 of the source name (T15), so raw names no longer appear in URLs and NEW-23 is revised. Still open: derive categories from products vs a categories endpoint (NEW-22). |
 | R-10 | **Resolved** — DECISIONS.md moved to repo root, NEW-xx merged with status, cut list extended, key technical decisions added. |
 | Others | Open — not yet actioned. |
 

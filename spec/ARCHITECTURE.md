@@ -308,7 +308,7 @@ Authorization would be role-based (`owner`, `sales`) enforced in a Fastify hook 
 | `POST /api/v1/enquiries` | Send enquiry | `202 Accepted` | `400 VALIDATION_FAILED` (field errors), `422 PRODUCT_UNAVAILABLE`, `429 RATE_LIMITED`, `502 EMAIL_DELIVERY_FAILED`, `502 PRODUCT_SOURCE_UNAVAILABLE` | ENQ-01 – ENQ-06 |
 
 **`Product` (response):** `id` (opaque string), `title`, `price` (number, USD), `description`, `category` (a `Category`, so the UI can show the label and link to the category page without another request), `imageUrl` (our proxy path), `rating` (`{average, count}` or `null`).
-**`Category`:** `{ id, name }` — `id` is an opaque identifier used in URLs (`/category/{id}`), consistent with product IDs; `name` is the display label (NEW-02). How `id` is derived from the data source is open (R-09); until decided it is the raw data-source value.
+**`Category`:** `{ id, name }` — `id` is a **UUID** used in URLs (`/category/{id}`); `name` is the display label (NEW-02). The data source only has category names, so the API derives the ID as a **UUID v5** of the source category name in a fixed, committed namespace UUID. Deterministic: the same category always has the same ID across restarts and instances, so links stay valid. A random UUID (v4) would change on every restart and break every category link. Derivation lives in one function in the catalogue service (T15).
 **Enquiry request:** `productId`, `name`, `email`, `phone?`, `message?`. Any extra fields (e.g. a product title) are **rejected/ignored** (A28).
 
 ### 6.3 Trade-offs

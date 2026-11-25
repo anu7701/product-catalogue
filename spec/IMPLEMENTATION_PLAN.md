@@ -34,7 +34,7 @@ These are still open in [SPEC_REVIEW.md](./SPEC_REVIEW.md). The plan does not wa
 |---|---|---|
 | **R-04** — top rated count vs "additional products" AC (NEW-21) | P3.4 | Implement current spec (BR3/BR8) behind a single `topRatedCount(categorySize)` rule |
 | **R-08** — final tie-break with string IDs (NEW-19) | P3.4 | Data source order (stable sort) — works for any ID format; flag in DECISIONS |
-| **R-09** — how the category `id` is derived: raw name vs URL-safe form (NEW-22, NEW-23) | P2.3, P3.3 | `id` = raw name, case-insensitive match (current spec), derived in a single `categoryId()` function |
+| **R-09** — categories derived from products vs a categories endpoint (NEW-22) | P2.3, P3.3 | Category **ID format is decided**: UUID v5 of the source name (T15), in a single `categoryId()` function. Where the category list comes from is still open; default: the source's categories call |
 
 ---
 
