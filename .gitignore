@@ -1,0 +1,22 @@
+# Challenge brief (not ours to redistribute)
+*.pdf
+
+# Dependencies & builds
+node_modules/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
