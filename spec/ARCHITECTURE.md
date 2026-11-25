@@ -234,9 +234,10 @@ All configuration via environment variables, validated by Zod at startup; docume
 | `CATEGORY_TOP_RATED_COUNT` | `3` (A8) | refuse to start |
 | `SALES_INBOX`, `MAIL_FROM` | `sales@example.com`, `no-reply@example.com` | **refuse to start** (NEW-48) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE` | Mailpit (`mailpit:1025`, no auth) | refuse to start |
-| `ENQUIRY_RATE_LIMIT_MAX`, `ENQUIRY_RATE_LIMIT_WINDOW` | `5`, `15 minutes` (NEW-43) | refuse to start |
+| `ENQUIRY_RATE_LIMIT_MAX`, `ENQUIRY_RATE_LIMIT_WINDOW_MINUTES` | `5`, `15` (NEW-43) | refuse to start |
 | `PUBLIC_SITE_URL` | `http://localhost:8080` (used for product links in emails) | refuse to start |
-| `LOG_LEVEL`, `TRUST_PROXY` | `info`, `true` behind web proxy | refuse to start |
+| `LOG_LEVEL`, `TRUST_PROXY` | `info`, `1` (number of trusted proxy hops; never `true`, see R-07) | refuse to start |
+| `VITE_STORE_NAME` (web, build-time) | `Catalogue` (CFG-04) | — |
 
 ---
 
