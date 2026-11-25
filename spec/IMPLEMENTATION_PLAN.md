@@ -1,6 +1,6 @@
 # Implementation Plan — Product Catalogue PoC
 
-> **Status:** v1 — ready to start
+> **Status:** v2 — validation now built with its first consumer, not as a separate phase
 > **Based on:** [FUNCTIONAL_SPEC.md](./FUNCTIONAL_SPEC.md), [ARCHITECTURE.md](./ARCHITECTURE.md) (v2), [DECISIONS.md](../DECISIONS.md)
 > **Branch:** all work on `feature/product-catalogue`; PR into `main` raised in Phase 7 and left open.
 > Feature IDs (`HOM-01`), assumption IDs (`A4`, `NEW-46`), technical decisions (`T13`) and review items (`R-04`) refer to those documents.
@@ -16,6 +16,7 @@
 - **Tier** (from the functional spec): **P0** must ship · **P1** should ship · **P2** cut first if over the time-box.
 - **Lane** marks what can run in parallel (§1.2).
 - Every task's tests are named with the feature ID they cover (e.g. `CAT-01: ties broken by rating count`).
+- **Validation is built with its first consumer.** Schemas still live in `packages/shared` (one definition for browser and server, A29, T9), but each is written and tested in the task that first needs it, not up front. Later tasks import it, never redefine it. Whichever lane reaches it first writes it.
 
 ### 0.2 Definition of done — applies to every task
 
@@ -44,7 +45,7 @@ These are still open in [SPEC_REVIEW.md](./SPEC_REVIEW.md). The plan does not wa
 | Phase | Goal | Depends on | Tier |
 |---|---|---|---|
 | **P0** Foundations | Monorepo, tooling, agent instructions | — | P0 |
-| **P1** Shared contract | Types, Zod schemas, error codes, messages | P0 | P0 |
+| **P1** Shared data types | Product/Category types and response shapes only (no validation) | P0 | P0 |
 | **P2** API platform | Config, ports, both product sources, HTTP skeleton | P1 | P0 |
 | **P3** API features | Services + routes for every feature | P2 | P0/P1 |
 | **P4** Web platform | App shell, API client, shared UI, header | P1 | P0 |
@@ -60,13 +61,14 @@ P0 ─► P1 ─┬─► P2 ─► P3 ─────────────�
           └─► P4 ─► P5 ─────────────┘   Web lane (mocks API with MSW from the shared contract)
 ```
 
-- **API lane and Web lane run in parallel after P1.** The shared contract (P1) is the hand-off: the web lane mocks the API with MSW using the same types, so it never waits for real endpoints.
+- **API lane and Web lane run in parallel after P1.** The shared data types (P1) are the hand-off: the web lane mocks the API with MSW using the same types, so it never waits for real endpoints.
+- **Validation sync points:** the search-term schema (written in P3.6) is reused by P4.6, and the enquiry schema (written in P3.9) by P5.5. If the web lane gets there first, it writes the schema in `shared` and the API task reuses it.
 - **Within a phase**, tasks marked with the same lane letter (e.g. `A`, `B`) have no dependency on each other and can be done in parallel (separate AI sessions/worktrees).
 - **P6 Docker tasks** can start as soon as P2.6 (API boots) and P4.1 (web builds) exist.
 
 ### 1.3 Critical path (minimum to meet all acceptance criteria)
 
-P0.1 → P1.1 → P1.3 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 → P3.9 → P4.1 → P4.3 → P5.4 → P5.5 → P6.3 → P7.1
+P0.1 → P1.1 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 → P3.9 → P4.1 → P4.3 → P5.4 → P5.5 → P6.3 → P7.1
 
 ---
 
@@ -91,27 +93,19 @@ P0.1 → P1.1 → P1.3 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 →
 
 ---
 
-## Phase P1 — Shared contract (`packages/shared`)
+## Phase P1 — Shared data types (`packages/shared`)
 
-**Goal:** One definition of request/response shapes, validation rules and user-facing messages, used by both apps (T9).
+**Goal:** The data shapes both lanes need on day one so they can work in parallel. **No validation rules here.** Each validation schema is written with its first consumer (§0.1): error codes in P2.7, search term in P3.6, enquiry in P3.9.
 **Dependencies:** P0.
-**Features:** contract for all modules; validation rules for ENQ-02, SRC-01.
+**Features:** data shapes for all modules.
 
 | ID | Task | Size | Lane | Depends on |
 |---|---|---|---|---|
-| P1.1 | `Product`, `Category`, `Rating` schemas/types (string IDs A4a; rating nullable NEW-07) | S | A | P0 |
-| P1.2 | Response envelopes: `{items}`, category page `{category, topRated, more}`, search `{query, items}` (ARCH §6.2) | S | A | P1.1 |
-| P1.3 | Enquiry request schema: trim, required, lengths, email format, phone charset, no CR/LF, unknown fields stripped (ENQ-02, NEW-31–34) + field error messages (ENQ-02.FR2) | M | B | P0 |
-| P1.4 | Search query schema: trim, 1–100 chars, literal (SRC-01 BR2–4) | S | B | P0 |
-| P1.5 | Problem Details schema + error code enum (ARCH §8.1) + customer-facing messages for each code | S | C | P0 |
+| P1.1 | `Product`, `Category`, `Rating` types (string IDs A4a; rating nullable NEW-07) and response shapes: `{items}`, category page `{category, topRated, more}`, search `{query, items}` (ARCH §6.2) | S | — | P0 |
 
-**Expected outputs:** `@catalogue/shared` exporting types, schemas and messages; importable from both apps.
-**Testing requirements:**
-- P1.3: table-driven tests for every ENQ-02 rule and edge case (whitespace-only name, uppercase email, `Zoë O'Brien`, CR/LF in name/email, 101-char name, 1001-char message, extra fields stripped).
-- P1.4: empty, whitespace-only, 100 vs 101 chars, special characters kept.
-- P1.1/P1.5: schema accepts valid fixtures, rejects missing fields.
-
-**Definition of done:** schemas fully tested; both apps compile against the package; no app-specific code in `shared`.
+**Expected outputs:** `@catalogue/shared` exporting data types; importable from both apps.
+**Testing requirements:** none beyond typecheck. The types are exercised by the adapter contract tests (P2.5) and MSW handlers (P4.3).
+**Definition of done:** both apps compile against the package; no app-specific code in `shared`.
 
 ---
 
@@ -129,7 +123,7 @@ P0.1 → P1.1 → P1.3 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 →
 | P2.4 | `FakeStoreProductSource`: list, get by id (empty-body → not found), categories; 5s timeout; Zod validation, drop malformed records (NEW-09, NEW-10); maps to our `Product` shape (ARCH §3.2) | M | C | P2.2 |
 | P2.5 | `ProductSource` **contract test suite** run against both adapters (ARCH §14.2 #15) | S | — | P2.3, P2.4 |
 | P2.6 | Fastify app factory + composition root selecting adapters by `PRODUCT_SOURCE`; `/api/v1/health` | S | A | P2.1, P2.2 |
-| P2.7 | Central error handler → Problem Details; request ID; no internals leaked (ARCH §8.2) | S | D | P2.6 |
+| P2.7 | Central error handler → Problem Details; request ID; no internals leaked (ARCH §8.2). **Writes in `shared`:** Problem Details schema, error code enum (ARCH §8.1) and the customer-facing message for each code | M | D | P2.6 |
 | P2.8 | Logging: pino JSON, request ID, PII redaction paths, named events (ARCH §9.1) | S | D | P2.6 |
 | P2.9 | Security plugins: helmet/CSP, body size limit, `Cache-Control: no-store` default, no CORS (ARCH §10.1) | S | D | P2.6 |
 
@@ -138,7 +132,7 @@ P0.1 → P1.1 → P1.3 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 →
 - P2.1: missing/invalid `SALES_INBOX` → startup error; `"3, 7 ,,12,3"` → `[3,7,12]` + warning; > 5 IDs capped; unset featured → empty + warning.
 - P2.4: MSW-recorded Fake Store responses — mapping, missing rating → `null`, malformed record dropped, timeout → `UpstreamUnavailable`, empty body → not found.
 - P2.5: same suite (list, get by id, unknown id, categories) green for both adapters.
-- P2.7: thrown domain errors map to the right status/code; 500 body contains no stack trace.
+- P2.7: thrown domain errors map to the right status/code and a body that passes the shared Problem Details schema; every error code has a message; 500 body contains no stack trace.
 - P2.8: enquiry-shaped body logged with name/email/phone/message redacted.
 
 **Definition of done:** API boots with either source; contract suite green for both; error/logging/security behaviour covered by `inject()` tests.
@@ -158,10 +152,10 @@ P0.1 → P1.1 → P1.3 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 →
 | P3.3 | `CatalogueService.categories`: alphabetical, display labels (NEW-02, NEW-03); route `GET /api/v1/categories` | S | B | P2 |
 | P3.4 | `CatalogueService.categoryPage`: filter, rank (avg desc → count desc → tie-break per §0.3), top N, unrated → more, no duplicates, unknown → `CategoryNotFound` (CAT-01, CAT-02) | M | B | P2 |
 | P3.5 | Route `GET /api/v1/categories/{category}/products` (404 vs 502) | S | B | P3.4 |
-| P3.6 | `SearchService`: case-insensitive literal substring over title/description/category, source order (SRC-02, A12, NEW-27); route `GET /api/v1/products?q=` with P1.4 validation | M | C | P2 |
+| P3.6 | `SearchService`: case-insensitive literal substring over title/description/category, source order (SRC-02, A12, NEW-27); route `GET /api/v1/products?q=`. **Writes in `shared`:** search-term schema — trim, 1–100 chars, literal (SRC-01 BR2–4, NEW-24) | M | C | P2 |
 | P3.7 | Route `GET /api/v1/products/{id}` (PRD-01, PRD-02) | S | C | P2 |
 | P3.8 | Image proxy `GET /api/v1/products/{id}/image`: look up by id, allow-listed host only, `image/*` only, size cap, timeout; fixture serves local files (ARCH §10.3) | M | D | P2 |
-| P3.9 | `EnquiryService`: validate → look up product (from source, never request) → record (no-op) → notify; `ProductUnavailable` if missing (ENQ-03, A28, A34, NEW-36) | M | E | P2 |
+| P3.9 | `EnquiryService`: validate → look up product (from source, never request) → record (no-op) → notify; `ProductUnavailable` if missing (ENQ-03, A28, A34, NEW-36). **Writes in `shared`:** enquiry schema — trim, required, lengths, email format, phone charset, no CR/LF, unknown fields stripped (ENQ-02, NEW-31–34) — and field error messages (ENQ-02.FR2) | M | E | P2 |
 | P3.10 | `SmtpNotifier`: compose email per ENQ-03.FR1 (To, From, Reply-To, subject, plain-text body incl. price + product link + UTC time) | S | E | P2 |
 | P3.11 | Route `POST /api/v1/enquiries` → `202`; 400/422/502 mapping; rate limit 5/15 min per IP with correct proxy trust, every attempt counts (ENQ-06, NEW-43/44) | M | E | P3.9, P3.10 |
 
@@ -169,10 +163,10 @@ P0.1 → P1.1 → P1.3 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 →
 **Testing requirements:**
 - P3.1: order preserved; stale ID skipped + warned; all stale → empty.
 - P3.4: tie-break example from CAT-01 AC (A 4.5/100, B 4.5/300, C, D → B, A, C / D); every product appears exactly once; unrated never in top rated; unknown category → error; 4-product category split.
-- P3.6: every row of the SRC-02 edge-case table (`BACKPACK`, `pack`, `men's` → women's clothing too, `jewelry`, `slim fit`, `electronics`, `.*`).
+- P3.6: search-term schema — empty, whitespace-only, 100 vs 101 chars, special characters kept; route returns 400 for missing/empty/too long `q`; every row of the SRC-02 edge-case table (`BACKPACK`, `pack`, `men's` → women's clothing too, `jewelry`, `slim fit`, `electronics`, `.*`).
 - P3.7/P3.5: 404 vs 502 when the source is down (failing fake adapter).
 - P3.8: non-allow-listed host refused; non-image content type refused.
-- P3.9: product details come from the source even if the request carries a title; missing product → `ProductUnavailable`; notifier failure → `EmailDeliveryFailed`; recorder called before notifier.
+- P3.9: enquiry schema — table-driven tests for every ENQ-02 rule and edge case (whitespace-only name, uppercase email, `Zoë O'Brien`, CR/LF in name/email, 101-char name, 1001-char message, extra fields stripped); product details come from the source even if the request carries a title; missing product → `ProductUnavailable`; notifier failure → `EmailDeliveryFailed`; recorder called before notifier.
 - P3.10: message fields exact (subject format, Reply-To = customer, "Not provided"/"No message" defaults, plain text only).
 - P3.11: 202 on success; 400 with field errors; 6th request → 429; spoofed `X-Forwarded-For` does not change the rate-limit key; no PII in logs.
 
@@ -193,7 +187,7 @@ P0.1 → P1.1 → P1.3 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 →
 | P4.3 | API client module: only place with URLs; parses Problem Details into typed errors (ARCH §2.2, §8.2) + MSW handlers built from shared types | M | B | P4.1 |
 | P4.4 | `PageState` (loading / empty / error with Try again), `NotFound` view (GLB-03, GLB-04) | S | A | P4.1 |
 | P4.5 | `ProductTile` + `ProductGrid`, `Price` (USD, 2 dp), `Rating` (`3.9 (120)`), image placeholder on error, alt text (GLB-02, NEW-04–08) | M | C | P4.1 |
-| P4.6 | `Header`: store name → home, category links, `SearchBar` (button + Enter, trim, empty hint, 100-char limit, pre-filled from URL) (GLB-01, SRC-01, NEW-25) | M | B | P4.3 |
+| P4.6 | `Header`: store name → home, category links, `SearchBar` (button + Enter, empty hint, pre-filled from URL) (GLB-01, SRC-01, NEW-25). **Reuses** the shared search-term schema from P3.6 for trim/empty/100-char rules (writes it first if P3.6 isn't done) | M | B | P4.3 |
 | P4.7 | Top-level error boundary + document title helper | S | A | P4.1 |
 
 **Expected outputs:** shell renders on every route with header; components render against MSW data.
@@ -214,7 +208,7 @@ P0.1 → P1.1 → P1.3 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 →
 | P5.2 | `CategoryPage`: heading, "Top rated in…", "More in…", not-found vs error (CAT-01, CAT-02) | S | A | P4 |
 | P5.3 | `SearchPage`: heading + count, results, no-results with links, empty/over-long term messages (SRC-02, SRC-03, NEW-26) | S | B | P4 |
 | P5.4 | `ProductPage`: all fields, category link, Enquire button, not-found vs error, tab title (PRD-01, PRD-02, NEW-28, NEW-29) | S | C | P4 |
-| P5.5 | `EnquiryForm`: inline on product page, fields + labels, client validation via shared schema, focus first field, keep input on close (ENQ-01, ENQ-02, NEW-30, NEW-35) | M | C | P5.4 |
+| P5.5 | `EnquiryForm`: inline on product page, fields + labels, focus first field, keep input on close (ENQ-01, ENQ-02, NEW-30, NEW-35). Client validation **reuses** the shared enquiry schema and messages from P3.9 (writes them first if P3.9 isn't done) | M | C | P5.4 (+ P3.9 schema) |
 | P5.6 | Submission states: "Sending…" + disabled button; Thank-you replaces form (only on 202); error messages for 400/422/429/502 keeping input; screen-reader announcements (ENQ-03–06, NEW-14, NEW-38, NEW-40, NEW-41) | M | C | P5.5 |
 
 **Expected outputs:** all journeys usable against MSW and against the running API.
@@ -270,8 +264,7 @@ P0.1 → P1.1 → P1.3 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 →
 | Can run together | Why independent |
 |---|---|
 | P0.2, P0.3, P0.4 · P0.5, P0.6 | Separate config files |
-| P1.1–P1.2 · P1.3 · P1.4 · P1.5 | Separate schemas |
-| **Entire API lane (P2–P3) ∥ entire Web lane (P4–P5)** | Shared contract + MSW decouple them |
+| **Entire API lane (P2–P3) ∥ entire Web lane (P4–P5)** | Shared data types + MSW decouple them; two sync points for validation schemas (P3.6 → P4.6, P3.9 → P5.5) |
 | P2.3 ∥ P2.4 | Two adapters behind the same port |
 | P2.7 ∥ P2.8 ∥ P2.9 | Independent Fastify plugins |
 | P3.1–2 ∥ P3.3–5 ∥ P3.6–7 ∥ P3.8 ∥ P3.9–11 | Separate services/routes over the same ports |
