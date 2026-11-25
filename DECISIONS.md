@@ -150,7 +150,7 @@ Introduced while writing the functional spec to make rules specific enough to bu
 | NEW-20 | Non-ranked lists (category "More in…", search results) use data source order. | No ordering requirement; simplest. | Accepted |
 | NEW-21 | Category with ≤ 3 products: all in top rated, "More in…" hidden. | Avoids an empty section. | **Under review** — can fail the category AC (R-04), decision deferred |
 | NEW-22 | Existing category with 0 products → empty-state message. | Possible after data source changes. | **Under review** — may be unreachable (R-09) |
-| NEW-23 | Category address matching is case-insensitive but otherwise exact. | Forgiving of typed URLs without fuzzy matching. | **Under review** — may be replaced by slugs (R-09) |
+| NEW-23 | Category address matching is case-insensitive but otherwise exact. | Forgiving of typed URLs without fuzzy matching. | **Under review** — may be replaced by a URL-safe category `id` (R-09) |
 | NEW-24 | Search term max 100 characters. | Bounds input; enough for any product search. | Accepted |
 | NEW-25 | Search bar pre-filled with current term on results page. | Lets customer refine the search. | Accepted |
 | NEW-26 | `/search` with no/empty term shows "Enter a search term", no products. | Consistent with A13. | Accepted |

@@ -20,10 +20,16 @@ export interface Rating {
   count: number;
 }
 
+/**
+ * Opaque category identifier, used in URLs as `/category/{id}` (GLB-04).
+ * Like ProductId, never parse it or assume a format; how it is derived from
+ * the data source is open (SPEC_REVIEW R-09).
+ */
+export type CategoryId = string;
+
 /** A product category. */
 export interface Category {
-  /** Identifier used in URLs, e.g. `/category/{slug}` (GLB-04). */
-  slug: string;
+  id: CategoryId;
   /** Display label, e.g. "Men's clothing" (NEW-02). */
   name: string;
 }

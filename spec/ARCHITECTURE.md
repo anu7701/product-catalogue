@@ -308,7 +308,7 @@ Authorization would be role-based (`owner`, `sales`) enforced in a Fastify hook 
 | `POST /api/v1/enquiries` | Send enquiry | `202 Accepted` | `400 VALIDATION_FAILED` (field errors), `422 PRODUCT_UNAVAILABLE`, `429 RATE_LIMITED`, `502 EMAIL_DELIVERY_FAILED`, `502 PRODUCT_SOURCE_UNAVAILABLE` | ENQ-01 – ENQ-06 |
 
 **`Product` (response):** `id` (opaque string), `title`, `price` (number, USD), `description`, `category` (a `Category`, so the UI can show the label and link to the category page without another request), `imageUrl` (our proxy path), `rating` (`{average, count}` or `null`).
-**`Category`:** `{ slug, name }` — `slug` is the raw data-source value used in URLs, `name` the display label (NEW-02).
+**`Category`:** `{ id, name }` — `id` is an opaque identifier used in URLs (`/category/{id}`), consistent with product IDs; `name` is the display label (NEW-02). How `id` is derived from the data source is open (R-09); until decided it is the raw data-source value.
 **Enquiry request:** `productId`, `name`, `email`, `phone?`, `message?`. Any extra fields (e.g. a product title) are **rejected/ignored** (A28).
 
 ### 6.3 Trade-offs
