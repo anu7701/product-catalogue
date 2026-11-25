@@ -5,5 +5,8 @@
   "type": "module",
   "dependencies": {
     "@catalogue/shared": "*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   }
 }
