@@ -1,0 +1,12 @@
+{
+  "name": "product-catalogue",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
+}
