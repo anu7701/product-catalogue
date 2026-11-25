@@ -301,13 +301,13 @@ Authorization would be role-based (`owner`, `sales`) enforced in a Fastify hook 
 | `GET /api/v1/health` | Liveness (does not call upstream) | `200 {status:"ok"}` | — | ops |
 | `GET /api/v1/featured-products` | Owner-chosen featured products, in order, stale skipped | `200 {items: Product[]}` (may be empty) | `502` | HOM-01 |
 | `GET /api/v1/categories` | All categories, alphabetical | `200 {items: Category[]}` | `502` | GLB-01, HOM-02 |
-| `GET /api/v1/categories/{category}/products` | Category page, already split | `200 {category, topRated: Product[], more: Product[]}` | `404 CATEGORY_NOT_FOUND`, `502` | CAT-01, CAT-02 |
+| `GET /api/v1/categories/{category}/products` | Category page, already split | `200 {category: Category, topRated: Product[], more: Product[]}` | `404 CATEGORY_NOT_FOUND`, `502` | CAT-01, CAT-02 |
 | `GET /api/v1/products?q={term}` | Search: literal case-insensitive match. `q` is **required** (listing the whole catalogue without a term is not a feature) | `200 {query, items: Product[]}` | `400 VALIDATION_FAILED` (missing/empty/too long), `502` | SRC-01 – SRC-03 |
 | `GET /api/v1/products/{id}` | Product details | `200 Product` | `404 PRODUCT_NOT_FOUND`, `502` | PRD-01, PRD-02 |
 | `GET /api/v1/products/{id}/image` | Image proxy (§10.3) | `200` image bytes | `404`, `502` | constraint 2 |
 | `POST /api/v1/enquiries` | Send enquiry | `202 Accepted` | `400 VALIDATION_FAILED` (field errors), `422 PRODUCT_UNAVAILABLE`, `429 RATE_LIMITED`, `502 EMAIL_DELIVERY_FAILED`, `502 PRODUCT_SOURCE_UNAVAILABLE` | ENQ-01 – ENQ-06 |
 
-**`Product` (response):** `id`, `title`, `price` (number, USD), `description`, `category`, `imageUrl` (our proxy path), `rating` (`{average, count}` or `null`).
+**`Product` (response):** `id` (opaque string), `title`, `price` (number, USD), `description`, `category` (a `Category`, so the UI can show the label and link to the category page without another request), `imageUrl` (our proxy path), `rating` (`{average, count}` or `null`).
 **`Category`:** `{ slug, name }` — `slug` is the raw data-source value used in URLs, `name` the display label (NEW-02).
 **Enquiry request:** `productId`, `name`, `email`, `phone?`, `message?`. Any extra fields (e.g. a product title) are **rejected/ignored** (A28).
 
