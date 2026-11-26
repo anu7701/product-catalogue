@@ -9,8 +9,8 @@ describe('routes (GLB-04)', () => {
     ['/search?q=bag', 'Search'],
     ['/product/1', 'Product'],
     ['/product/1/', 'Product'], // NEW-13: trailing slash is the same page
-    ['/does-not-exist', 'NotFound'],
-    ['/product', 'NotFound'],
+    ['/does-not-exist', 'Page not found'],
+    ['/product', 'Page not found'],
   ])('%s renders the %s page inside the layout', async (url, heading) => {
     renderApp(url);
 
