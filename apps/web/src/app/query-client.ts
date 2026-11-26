@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
+import { isRetryable } from '../api/client.ts';
 
 /**
  * Server-state handling (ARCHITECTURE §2, T4). TanStack Query is used for
@@ -12,7 +13,8 @@ export function createQueryClient(): QueryClient {
         staleTime: 0,
         gcTime: 0,
         refetchOnWindowFocus: false,
-        retry: 1,
+        // Retry a failed read once, only when the server or network failed (ARCHITECTURE §8.2).
+        retry: (failureCount, error) => failureCount < 1 && isRetryable(error),
       },
       mutations: {
         // Never resubmit automatically: a retried enquiry could send two emails (NEW-42).
