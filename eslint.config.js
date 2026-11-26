@@ -36,6 +36,8 @@ export default tseslint.config(
     files: ['apps/web/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat.recommended],
     languageOptions: { globals: globals.browser },
+    // The browser has no logger: console.error is how crashes reach developers.
+    rules: { 'no-console': ['error', { allow: ['error'] }] },
   },
   {
     // Plain JS config files are not part of any tsconfig.
