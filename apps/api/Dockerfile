@@ -9,6 +9,7 @@ COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY packages/shared/package.json packages/shared/
+COPY e2e/package.json e2e/
 # Production dependencies of the API and the shared package only.
 RUN npm ci --omit=dev --workspace=@catalogue/api --ignore-scripts --no-audit --no-fund
 
