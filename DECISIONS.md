@@ -208,6 +208,7 @@ Full reasoning and alternatives: [spec/ARCHITECTURE.md §15](spec/ARCHITECTURE.m
 | T12 | `202 Accepted` for enquiries | Email accepted for sending, nothing stored |
 | T13 | **Second product source: committed JSON fixture** (`PRODUCT_SOURCE=fakestore\|fixture`) | Runs offline if Fake Store is down; deterministic tests; proves the data source is swappable |
 | T14 | API routes `/products?q=` (search) and `/featured-products` | Avoids collisions with opaque product IDs under `/products/{id}` |
+| T16 | **API runs TypeScript natively in Node** (type stripping); no compile/bundle step. Imports use `.ts` extensions; only erasable TS syntax (no `enum`) | One less tool and build stage; dev and production run the same files. Trade-off: requires Node ≥ 24 and forbids a few TS features |
 | T15 | **Category IDs are UUID v5**, derived from the source category name in a fixed namespace; URLs are `/category/{uuid}` | Consistent opaque IDs; deterministic so links survive restarts (random v4 would not). Trade-off: URLs are not human-readable, and renaming a category in the source changes its ID |
 
 ## 9. Dropped or simplified (and why)
