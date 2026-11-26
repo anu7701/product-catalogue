@@ -3,32 +3,11 @@ import {
   type CategoryProductsResponse,
   ErrorCode,
   type FeaturedProductsResponse,
-  problemDetailsSchema,
 } from '@catalogue/shared';
-import type { FastifyInstance } from 'fastify';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { categoryId } from '../../../src/services/category.ts';
 import { failingProductSource } from '../../helpers/doubles.ts';
-import { buildTestApp, type TestAppOptions } from '../../helpers/test-app.ts';
-
-let app: FastifyInstance | undefined;
-
-afterEach(async () => {
-  await app?.close();
-  app = undefined;
-});
-
-async function get(url: string, options?: TestAppOptions) {
-  app = await buildTestApp(options);
-  return app.inject({ url });
-}
-
-function expectSourceUnavailable(response: Awaited<ReturnType<typeof get>>) {
-  expect(response.statusCode).toBe(502);
-  expect(problemDetailsSchema.parse(response.json()).code).toBe(
-    ErrorCode.PRODUCT_SOURCE_UNAVAILABLE,
-  );
-}
+import { expectProblem, expectSourceUnavailable, get } from '../../helpers/http.ts';
 
 describe('GET /api/v1/featured-products', () => {
   it('HOM-01: 200 with the featured products in configured order', async () => {
@@ -92,8 +71,7 @@ describe('GET /api/v1/categories/{categoryId}/products', () => {
     async (id) => {
       const response = await get(`/api/v1/categories/${id}/products`);
 
-      expect(response.statusCode).toBe(404);
-      expect(problemDetailsSchema.parse(response.json()).code).toBe(ErrorCode.CATEGORY_NOT_FOUND);
+      expectProblem(response, 404, ErrorCode.CATEGORY_NOT_FOUND);
     },
   );
 

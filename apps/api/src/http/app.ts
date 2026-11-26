@@ -3,6 +3,7 @@ import type { Services } from '../composition.ts';
 import { generateRequestId, registerErrorHandling } from './errors.ts';
 import { catalogueRoutes } from './routes/catalogue.ts';
 import { healthRoutes } from './routes/health.ts';
+import { productRoutes } from './routes/products.ts';
 import { BODY_LIMIT_BYTES, registerSecurity } from './security.ts';
 
 export interface AppDependencies {
@@ -32,6 +33,7 @@ export function buildApp(deps: AppDependencies): FastifyInstance {
   registerErrorHandling(app);
   healthRoutes(app);
   catalogueRoutes(app, deps.services.catalogue);
+  productRoutes(app, deps.services);
 
   return app;
 }

@@ -4,6 +4,7 @@ import type { Config } from './config/config.ts';
 import type { Logger } from './logging/logger.ts';
 import type { ProductSource } from './ports/product-source.ts';
 import { CatalogueService } from './services/catalogue-service.ts';
+import { SearchService } from './services/search-service.ts';
 
 /**
  * The only place that reads PRODUCT_SOURCE and knows which adapters exist
@@ -24,6 +25,7 @@ export async function createProductSource(
 /** Every service the HTTP layer uses. */
 export interface Services {
   catalogue: CatalogueService;
+  search: SearchService;
 }
 
 export interface ServiceDependencies {
@@ -41,5 +43,6 @@ export function createServices(deps: ServiceDependencies): Services {
       featuredProductIds: deps.catalogue.featuredProductIds,
       categoryTopRatedCount: deps.catalogue.categoryTopRatedCount,
     }),
+    search: new SearchService({ productSource: deps.productSource }),
   };
 }
