@@ -3,7 +3,9 @@ import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product
 import { createServices } from '../../src/composition.ts';
 import { buildApp } from '../../src/http/app.ts';
 import { createLogger } from '../../src/logging/create-logger.ts';
+import type { Notifier } from '../../src/ports/notifier.ts';
 import type { ProductSource } from '../../src/ports/product-source.ts';
+import { RecordingNotifier } from './doubles.ts';
 
 export interface TestAppOptions {
   productSource?: ProductSource;
@@ -11,6 +13,8 @@ export interface TestAppOptions {
   trustProxyHops?: number;
   featuredProductIds?: string[];
   categoryTopRatedCount?: number;
+  notifier?: Notifier;
+  enquiryRateLimit?: { max: number; windowMinutes: number };
 }
 
 /** Defaults mirror .env.example. */
@@ -29,8 +33,15 @@ export async function buildTestApp(options: TestAppOptions = {}): Promise<Fastif
       featuredProductIds: options.featuredProductIds ?? TEST_FEATURED_IDS,
       categoryTopRatedCount: options.categoryTopRatedCount ?? 3,
     },
+    notifier: options.notifier ?? new RecordingNotifier(),
+    publicSiteUrl: 'http://localhost:8080',
   });
-  return buildApp({ logger, services, trustProxyHops: options.trustProxyHops ?? 0 });
+  return buildApp({
+    logger,
+    services,
+    trustProxyHops: options.trustProxyHops ?? 0,
+    enquiryRateLimit: options.enquiryRateLimit ?? { max: 5, windowMinutes: 15 },
+  });
 }
 
 /** A logger that captures parsed JSON log lines. */
