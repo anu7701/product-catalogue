@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+
+  e2e:
+    name: Docker stack + acceptance tests
+    runs-on: ubuntu-latest
+    needs: checks
+    timeout-minutes: 20
+    env:
+      # Offline catalogue: CI never depends on Fake Store being up (T13).
+      PRODUCT_SOURCE: fixture
+      # The suite sends several enquiries from one address.
+      ENQUIRY_RATE_LIMIT_MAX: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+      - name: Build and start the stack
+        run: docker compose up --build --detach --wait --wait-timeout 180
+      - run: npm ci
+      - run: npx --workspace=@catalogue/e2e playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Container logs
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          retention-days: 7
+      - name: Stop the stack
+        if: always()
+        run: docker compose down --volumes
