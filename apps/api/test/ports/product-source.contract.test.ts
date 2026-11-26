@@ -3,10 +3,10 @@ import { setupServer } from 'msw/node';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import recordedCategories from '../adapters/fakestore/recordings/categories.json' with { type: 'json' };
 import recordedProducts from '../adapters/fakestore/recordings/products.json' with { type: 'json' };
-import { FakeStoreProductSource } from '../adapters/fakestore/fakestore-product-source.ts';
-import { FixtureProductSource } from '../adapters/fixture/fixture-product-source.ts';
-import { silentLogger } from '../logging/logger.ts';
-import type { ProductSource } from './product-source.ts';
+import { FakeStoreProductSource } from '../../src/adapters/fakestore/fakestore-product-source.ts';
+import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
+import { silentLogger } from '../../src/logging/logger.ts';
+import type { ProductSource } from '../../src/ports/product-source.ts';
 
 /**
  * The ProductSource contract (ARCHITECTURE §14.2 #15). Every adapter must

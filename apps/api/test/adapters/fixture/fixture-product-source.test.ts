@@ -2,7 +2,10 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FixtureLoadError, FixtureProductSource } from './fixture-product-source.ts';
+import {
+  FixtureLoadError,
+  FixtureProductSource,
+} from '../../../src/adapters/fixture/fixture-product-source.ts';
 
 // Behaviour shared with every ProductSource is covered by the contract suite
 // (product-source.contract.test.ts). These tests cover what is fixture-specific.

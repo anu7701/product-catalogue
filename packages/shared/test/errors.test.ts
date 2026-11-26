@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ErrorCode, errorMessages, problemDetailsSchema } from './errors.ts';
+import { ErrorCode, errorMessages, problemDetailsSchema } from '../src/errors.ts';
 
 describe('error contract', () => {
   it('every error code has a customer-facing message', () => {

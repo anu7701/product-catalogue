@@ -1,7 +1,7 @@
 import { ErrorCode, errorMessages, problemDetailsSchema } from '@catalogue/shared';
 import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
-import { FixtureProductSource } from '../adapters/fixture/fixture-product-source.ts';
+import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
 import {
   CategoryNotFoundError,
   EmailDeliveryFailedError,
@@ -9,10 +9,10 @@ import {
   ProductUnavailableError,
   UpstreamUnavailableError,
   ValidationFailedError,
-} from '../domain/errors.ts';
-import { createLogger } from '../logging/create-logger.ts';
-import { LogEvent } from '../logging/logger.ts';
-import { buildApp } from './app.ts';
+} from '../../src/domain/errors.ts';
+import { createLogger } from '../../src/logging/create-logger.ts';
+import { LogEvent } from '../../src/logging/logger.ts';
+import { buildApp } from '../../src/http/app.ts';
 
 let app: FastifyInstance | undefined;
 let logLines: Record<string, unknown>[] = [];

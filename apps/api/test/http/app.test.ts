@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { FakeStoreProductSource } from '../adapters/fakestore/fakestore-product-source.ts';
-import { FixtureProductSource } from '../adapters/fixture/fixture-product-source.ts';
-import { createProductSource } from '../composition.ts';
-import { createLogger } from '../logging/create-logger.ts';
-import { silentLogger } from '../logging/logger.ts';
-import { buildApp } from './app.ts';
+import { FakeStoreProductSource } from '../../src/adapters/fakestore/fakestore-product-source.ts';
+import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
+import { createProductSource } from '../../src/composition.ts';
+import { createLogger } from '../../src/logging/create-logger.ts';
+import { silentLogger } from '../../src/logging/logger.ts';
+import { buildApp } from '../../src/http/app.ts';
 
 let app: FastifyInstance | undefined;
 

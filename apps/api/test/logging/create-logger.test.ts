@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { FixtureProductSource } from '../adapters/fixture/fixture-product-source.ts';
-import { buildApp } from '../http/app.ts';
-import { createLogger, REDACTED } from './create-logger.ts';
-import { LogEvent } from './logger.ts';
+import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
+import { buildApp } from '../../src/http/app.ts';
+import { createLogger, REDACTED } from '../../src/logging/create-logger.ts';
+import { LogEvent } from '../../src/logging/logger.ts';
 
 function capture() {
   const lines: Record<string, unknown>[] = [];

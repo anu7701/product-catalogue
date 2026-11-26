@@ -1,9 +1,9 @@
 import { delay, http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { UpstreamUnavailableError } from '../../domain/errors.ts';
-import { LogEvent, type Logger } from '../../logging/logger.ts';
-import { FakeStoreProductSource } from './fakestore-product-source.ts';
+import { UpstreamUnavailableError } from '../../../src/domain/errors.ts';
+import { LogEvent, type Logger } from '../../../src/logging/logger.ts';
+import { FakeStoreProductSource } from '../../../src/adapters/fakestore/fakestore-product-source.ts';
 import recordedProducts from './recordings/products.json' with { type: 'json' };
 
 // Behaviour shared with every ProductSource is covered by the contract suite

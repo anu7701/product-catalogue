@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfigError, loadConfig, normaliseFeaturedIds } from './config.ts';
+import { ConfigError, loadConfig, normaliseFeaturedIds } from '../../src/config/config.ts';
 
 /** The minimum valid environment: only settings without a default. */
 const validEnv = {

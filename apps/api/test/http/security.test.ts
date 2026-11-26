@@ -1,10 +1,10 @@
 import { ErrorCode } from '@catalogue/shared';
 import type { FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FixtureProductSource } from '../adapters/fixture/fixture-product-source.ts';
-import { createLogger } from '../logging/create-logger.ts';
-import { buildApp } from './app.ts';
-import { BODY_LIMIT_BYTES } from './security.ts';
+import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
+import { createLogger } from '../../src/logging/create-logger.ts';
+import { buildApp } from '../../src/http/app.ts';
+import { BODY_LIMIT_BYTES } from '../../src/http/security.ts';
 
 let app: FastifyInstance;
 
