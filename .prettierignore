@@ -5,3 +5,5 @@ coverage
 package-lock.json
 # Documents are hand-formatted (wide tables); don't reflow them.
 *.md
+playwright-report
+test-results
