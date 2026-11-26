@@ -33,7 +33,8 @@ const envSchema = z.object({
   ENQUIRY_RATE_LIMIT_WINDOW_MINUTES: z.coerce.number().int().min(1).default(15),
 
   PUBLIC_SITE_URL: z.url(),
-  HOST: z.string().min(1).default('0.0.0.0'),
+  // Loopback by default: reachable from this machine only. Containers set 0.0.0.0.
+  HOST: z.string().min(1).default('127.0.0.1'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   // Number of trusted proxy hops in front of the API (R-07). 0 = trust none.

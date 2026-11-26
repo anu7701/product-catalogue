@@ -42,7 +42,12 @@ describe('loadConfig', () => {
       pass: undefined,
     });
     expect(config.enquiryRateLimit).toEqual({ max: 5, windowMinutes: 15 });
-    expect(config.server).toMatchObject({ port: 3000, logLevel: 'info', trustProxyHops: 0 });
+    expect(config.server).toMatchObject({
+      host: '127.0.0.1',
+      port: 3000,
+      logLevel: 'info',
+      trustProxyHops: 0,
+    });
     expect(warnings).toEqual([]);
   });
 
