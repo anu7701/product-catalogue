@@ -1,11 +1,12 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderApp } from '../helpers/render.tsx';
+import { electronics } from '../mocks/data.ts';
 
 describe('routes (GLB-04)', () => {
   it.each([
     ['/', 'Home'],
-    ['/category/8d88b533-0000-5000-8000-000000000000', 'Category'],
+    [`/category/${electronics.id}`, 'Electronics'],
     ['/search?q=bag', 'Search'],
     ['/product/1', 'Product'],
     ['/product/1/', 'Product'], // NEW-13: trailing slash is the same page
