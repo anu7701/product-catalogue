@@ -7,7 +7,7 @@ describe('routes (GLB-04)', () => {
   it.each([
     ['/', 'Home'],
     [`/category/${electronics.id}`, 'Electronics'],
-    ['/search?q=bag', 'Search'],
+    ['/search?q=bag', 'Results for “bag”'],
     ['/product/1', 'Product'],
     ['/product/1/', 'Product'], // NEW-13: trailing slash is the same page
     ['/does-not-exist', 'Page not found'],
