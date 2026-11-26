@@ -1,8 +1,8 @@
 # Decisions & Assumptions
 
-> **Status:** v2 — single source of truth for assumptions and decisions. Requirements (A1–A46), detailed functional assumptions (NEW-01–NEW-49, §6) and key technical decisions (§8). Items still under review are marked and tracked in [spec/SPEC_REVIEW.md](spec/SPEC_REVIEW.md).
+> **Status:** v3, final for submission — single source of truth for assumptions and decisions: requirements (A1–A46), detailed functional assumptions (NEW-01–NEW-49, §6), key technical decisions (§8) and the outcome of every spec-review item (§9a).
 > **Source:** `Code Challenge - AI-Native Engineer.pdf`
-> **Working documents:** [spec/FUNCTIONAL_SPEC.md](spec/FUNCTIONAL_SPEC.md) (features & acceptance criteria) · [spec/ARCHITECTURE.md](spec/ARCHITECTURE.md) (technical design) · [spec/SPEC_REVIEW.md](spec/SPEC_REVIEW.md) (open review findings)
+> **Working documents:** [spec/FUNCTIONAL_SPEC.md](spec/FUNCTIONAL_SPEC.md) (features & acceptance criteria) · [spec/ARCHITECTURE.md](spec/ARCHITECTURE.md) (technical design) · [spec/IMPLEMENTATION_PLAN.md](spec/IMPLEMENTATION_PLAN.md) (phases and tasks) · [spec/SPEC_REVIEW.md](spec/SPEC_REVIEW.md) (review findings) · [spec/ACCEPTANCE_RESULTS.md](spec/ACCEPTANCE_RESULTS.md) (acceptance run)
 
 ---
 
@@ -148,8 +148,8 @@ Introduced while writing the functional spec to make rules specific enough to bu
 | NEW-18 | Partial data failure hides only the affected section/product. | Show what we can. | Accepted |
 | NEW-19 | Final tie-break in category top rated: lower product ID first. | Deterministic order for testing. | **Under review** — conflicts with opaque string IDs (R-08). **Implemented meanwhile:** remaining ties keep data source order (stable sort), which works for any ID format |
 | NEW-20 | Non-ranked lists (category "More in…", search results) use data source order. | No ordering requirement; simplest. | Accepted |
-| NEW-21 | Category with ≤ 3 products: all in top rated, "More in…" hidden. | Avoids an empty section. | **Under review** — can fail the category AC (R-04), decision deferred |
-| NEW-22 | Existing category with 0 products → empty-state message. | Possible after data source changes. | **Under review** — may be unreachable (R-09) |
+| NEW-21 | Category with ≤ 3 products: all in top rated, "More in…" hidden. | Avoids an empty section. | **Under review** (R-04). **Built as:** top rated shows up to the configured 3 regardless of category size, so a category of ≤ 3 rated products has no "More in…". Never happens with the current data (smallest category has 4) |
+| NEW-22 | Existing category with 0 products → empty-state message. | Possible after data source changes. | Accepted — reachable: categories come from the source's own categories list (R-09 default), which can list a category with no products |
 | NEW-23 | Category IDs (UUIDs) matched exactly; hex letters compared case-insensitively. | UUIDs are case-insensitive by definition. | Accepted — revised for UUID category IDs (T15) |
 | NEW-24 | Search term max 100 characters. | Bounds input; enough for any product search. | Accepted |
 | NEW-25 | Search bar pre-filled with current term on results page. | Lets customer refine the search. | Accepted |
@@ -208,8 +208,8 @@ Full reasoning and alternatives: [spec/ARCHITECTURE.md §15](spec/ARCHITECTURE.m
 | T12 | `202 Accepted` for enquiries | Email accepted for sending, nothing stored |
 | T13 | **Second product source: committed JSON fixture** (`PRODUCT_SOURCE=fakestore\|fixture`) | Runs offline if Fake Store is down; deterministic tests; proves the data source is swappable |
 | T14 | API routes `/products?q=` (search) and `/featured-products` | Avoids collisions with opaque product IDs under `/products/{id}` |
-| T16 | **API runs TypeScript natively in Node** (type stripping); no compile/bundle step. Imports use `.ts` extensions; only erasable TS syntax (no `enum`) | One less tool and build stage; dev and production run the same files. Trade-off: requires Node ≥ 24 and forbids a few TS features |
 | T15 | **Category IDs are UUID v5**, derived from the source category name in a fixed namespace; URLs are `/category/{uuid}` | Consistent opaque IDs; deterministic so links survive restarts (random v4 would not). Trade-off: URLs are not human-readable, and renaming a category in the source changes its ID |
+| T16 | **API runs TypeScript natively in Node** (type stripping); no compile/bundle step. Imports use `.ts` extensions; only erasable TS syntax (no `enum`) | One less tool and build stage; dev and production run the same files. Trade-off: requires Node ≥ 24 and forbids a few TS features |
 
 ## 9. Dropped or simplified (and why)
 
@@ -230,6 +230,37 @@ Full reasoning and alternatives: [spec/ARCHITECTURE.md §15](spec/ARCHITECTURE.m
 | Monitoring / tracing | **Simplified** to structured logs + health check | Enough at this size; no accounts needed. |
 | Automatic email retry | **Dropped** (A31, NEW-42) | Needs stored enquiries (Next step #1); the customer retries instead. |
 | CAPTCHA / WAF | **Dropped** (A36) | Needs third-party accounts; rate limit + validation instead. |
+| Enquiry form as a dialog | **Simplified** to an inline form (A26) | No focus trapping or Escape handling needed; the product stays visible. |
+| Live manual visual QA | **Not done** | Journeys are verified by component tests and a Playwright suite in Chromium against the Docker stack (spec/ACCEPTANCE_RESULTS.md); nobody has reviewed the look by eye. The look is a placeholder anyway (A40). |
+| One assessed PR for all the work | **Changed** to one PR per phase (#1–#9, merged), plus the open final PR | Smaller, reviewable steps; the final PR links each phase. |
+
+## 9a. Spec review items: outcomes
+
+From [spec/SPEC_REVIEW.md](spec/SPEC_REVIEW.md), as built.
+
+| Item | Outcome |
+|---|---|
+| R-01 Live Fake Store dependency | **Resolved:** offline fixture source (T13); CI and tests use it |
+| R-02 Cache contradicted the spec | **Resolved** by not caching (T4) |
+| R-03 Route collisions with product IDs | **Resolved:** `/products?q=`, `/featured-products` (T14) |
+| R-04 Category "additional products" vs top-rated count | **Deferred:** current spec behaviour built behind one `topRatedLimit()` function; can't occur with current data (NEW-21) |
+| R-05 Scope vs time-box | **Accepted:** the full P0/P1 scope was built; nothing from the proposed cut list needed cutting |
+| R-06 "Top rated" means two things | **Open** (Q1): home heading kept as the spec says ("Top rated") |
+| R-07 Rate-limit bypass via X-Forwarded-For | **Resolved:** trusted hop count, not `true`; Nginx replaces the header; tested end to end |
+| R-08 Tie-break with string IDs | **Resolved** with the default: remaining ties keep source order (NEW-19) |
+| R-09 Category identity | **Resolved:** UUID v5 IDs (T15); category list from the source's categories call |
+| R-10 DECISIONS.md not the source of truth | **Resolved** (this document) |
+| R-11 SMTP "accepted" ≠ delivered; SES prerequisites | **Open:** "Thank you" means the mail server accepted it; SES setup is a next step |
+| R-12 Featured-ID warning logged on every request | **Open** (accepted for the PoC) |
+| R-13 IP addresses in logs; Mailpit exposure | **Partly resolved:** all ports bound to 127.0.0.1; request logs still include client IPs |
+| R-14 Over-long search term; API paths served as SPA | **Resolved:** search page checks the term first; Nginx never serves the SPA for `/api/` |
+| R-16 In-memory rate limit with several instances | **Open:** fine for one instance; shared store before scaling out |
+| R-17 Authorization statement | **Resolved:** the enquiry POST is the only write endpoint (§9) |
+| R-18 Image proxy limits | **Resolved:** host allow-list, no redirects, `image/*` only, 5 MB cap, timeout |
+| R-20 Undocumented prerequisites | **Resolved:** README prerequisites |
+| R-22 Only CR/LF rejected | **Open:** other control characters are allowed in names |
+| R-25 Response shape gaps | **Resolved:** `category` is a `Category`; 429 includes `Retry-After` |
+| R-15, R-19, R-21, R-23, R-24 | Minor; R-24 no longer applies (no cache); the rest accepted as noted in the review |
 
 ## 10. Open questions for the entrepreneur
 
@@ -260,9 +291,19 @@ See [spec/ARCHITECTURE.md](spec/ARCHITECTURE.md) for detail. In short, each thin
 
 1. **Persist enquiries and send email in the background with retries** (revisits A34). Save every enquiry first, show "Thank you" once it is saved, then send the email separately and retry on failure. This removes the one case where a customer sees an error because the email provider is down, and gives the business an enquiry history. Needs a retention/deletion policy for the personal data stored.
 2. **Add catalogue caching** (revisits T4) as a wrapper around `ProductSource`: short-lived in-memory copy, serve last-known data if the source fails. Reduces upstream calls and keeps the site up during Fake Store outages.
-
-_Further items to be added at the end of the build._
+3. **Settle the open product questions with the entrepreneur:** Q1/R-06 (one meaning for "top rated"), R-04, Q6 (privacy notice on the form, a launch blocker), Q7 (public prices).
+4. **Deploy to AWS with infrastructure as code** (CDK): ECS Fargate + CloudFront/S3 + SES as designed (ARCHITECTURE §12.2), including SES domain verification and bounce handling (R-11), and a shared rate-limit store or WAF rules before running more than one API instance (R-16).
+5. **Apply the creative work:** real design tokens and a responsive layout, with a visual and accessibility review in real browsers.
+6. **Logging hygiene:** drop or truncate client IPs in request logs (R-13); log each stale featured ID once per refresh rather than per request (R-12).
 
 ## 13. Time spent
 
-_To be completed at the end of the build._
+> **TO FILL IN before submitting** (the challenge asks for actual time; going over the 2–3 h time-box is fine if stated honestly).
+
+| Activity | Time |
+|---|---|
+| Planning (requirements, assumptions, spec, architecture, review, plan) | _TBD_ |
+| Building | _TBD_ |
+| Testing | _TBD_ |
+| Reviewing (AI output, PRs, docs) | _TBD_ |
+| **Total** | _TBD_ |

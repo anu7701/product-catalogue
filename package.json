@@ -23,6 +23,7 @@
   },
   "scripts": {
     "dev:api": "npm run dev -w @catalogue/api",
+    "dev:web": "npm run dev -w @catalogue/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "format": "prettier --write .",
