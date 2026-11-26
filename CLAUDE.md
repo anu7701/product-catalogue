@@ -49,6 +49,7 @@ All four must pass before a task is done.
 
 ## Testing conventions
 
+- **Tests live in each package's `test/` folder, mirroring `src/`**: `apps/api/src/adapters/fixture/fixture-product-source.ts` → `apps/api/test/adapters/fixture/fixture-product-source.test.ts`. Never put tests in `src/`. Test-only data (e.g. recorded HTTP responses) lives under `test/` too.
 - Name tests after the spec ID they cover: `it('CAT-01: ties broken by rating count', …)`.
 - Services are tested with `FixtureProductSource` and an in-memory recording notifier — real ports, deterministic data.
 - **No live network calls in tests.** Fake Store adapter tests use MSW with recorded responses.

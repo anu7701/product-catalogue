@@ -227,7 +227,7 @@ P0.1 → P1.1 → P2.1 → P2.2 → P2.3 → P2.6 → P3.1 → P3.7 → P3.9 →
 |---|---|---|---|---|
 | P6.1 | API Dockerfile: multi-stage, workspace-aware (repo-root build context), non-root user | S | A | P2.6 |
 | P6.2 | Web Dockerfile: build SPA → Nginx; SPA fallback; `/api/*` proxied to api and **never** falls back to `index.html` | S | B | P4.1 |
-| P6.3 | `docker-compose.yml`: web (8080), api (internal), Mailpit (8025 UI); defaults inside compose so no `.env` is required; health checks | S | — | P6.1, P6.2 |
+| P6.3 | `docker-compose.yml`: web (8080), api (internal), Mailpit (8025 UI); defaults inside compose so no `.env` is required; health checks. Set `HOST=0.0.0.0` for the api container (the API defaults to `127.0.0.1`, local-only) and don't publish its port | S | — | P6.1, P6.2 |
 | P6.4 | Finalise `.env.example` with defaults matching compose; fixture switch documented | S | C | P6.3 |
 | P6.5 | Manual acceptance pass: run every functional-spec AC against the stack with `PRODUCT_SOURCE=fakestore` and `=fixture`; log results | M | — | P6.3, P3, P5 |
 | P6.6 | **(P2)** Playwright E2E: home → category → product → enquiry → assert email via Mailpit API, using fixture source | M | D | P6.3 |
