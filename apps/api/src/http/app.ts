@@ -2,6 +2,7 @@ import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify';
 import type { ProductSource } from '../ports/product-source.ts';
 import { generateRequestId, registerErrorHandling } from './errors.ts';
 import { healthRoutes } from './routes/health.ts';
+import { BODY_LIMIT_BYTES, registerSecurity } from './security.ts';
 
 export interface AppDependencies {
   logger: FastifyBaseLogger;
@@ -23,8 +24,10 @@ export function buildApp(deps: AppDependencies): FastifyInstance {
     // Request IDs: reuse a safe incoming X-Request-Id, else generate one.
     requestIdHeader: false,
     genReqId: generateRequestId,
+    bodyLimit: BODY_LIMIT_BYTES,
   });
 
+  registerSecurity(app);
   registerErrorHandling(app);
   healthRoutes(app);
 
