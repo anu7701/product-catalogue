@@ -298,12 +298,10 @@ See [spec/ARCHITECTURE.md](spec/ARCHITECTURE.md) for detail. In short, each thin
 
 ## 13. Time spent
 
-> **TO FILL IN before submitting** (the challenge asks for actual time; going over the 2–3 h time-box is fine if stated honestly).
-
 | Activity | Time |
 |---|---|
-| Planning (requirements, assumptions, spec, architecture, review, plan) | _TBD_ |
-| Building | _TBD_ |
-| Testing | _TBD_ |
-| Reviewing (AI output, PRs, docs) | _TBD_ |
-| **Total** | _TBD_ |
+| Planning: requirements and assumptions, functional spec, architecture, architect review, implementation plan | 2–2.5 h |
+| Implementation and testing: phases P0–P7, including reviewing each phase's output | 2 h |
+| **Total** | **4–4.5 h** |
+
+This is over the 2–3 hour time-box, with most of the time spent on planning.
