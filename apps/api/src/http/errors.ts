@@ -5,6 +5,7 @@ import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from
 import {
   CategoryNotFoundError,
   EmailDeliveryFailedError,
+  ProductImageNotFoundError,
   ProductNotFoundError,
   ProductUnavailableError,
   UpstreamUnavailableError,
@@ -33,10 +34,15 @@ function mapDomainError(error: unknown): Mapped | undefined {
   if (error instanceof ValidationFailedError) {
     return { status: 400, code: ErrorCode.VALIDATION_FAILED, errors: error.fieldErrors };
   }
-  if (error instanceof ProductNotFoundError)
+  if (error instanceof ProductNotFoundError) {
     return { status: 404, code: ErrorCode.PRODUCT_NOT_FOUND };
-  if (error instanceof CategoryNotFoundError)
+  }
+  if (error instanceof CategoryNotFoundError) {
     return { status: 404, code: ErrorCode.CATEGORY_NOT_FOUND };
+  }
+  if (error instanceof ProductImageNotFoundError) {
+    return { status: 404, code: ErrorCode.NOT_FOUND };
+  }
   if (error instanceof ProductUnavailableError) {
     return { status: 422, code: ErrorCode.PRODUCT_UNAVAILABLE };
   }

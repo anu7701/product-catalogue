@@ -126,3 +126,75 @@ describe('FakeStoreProductSource', () => {
     await expect(makeSource().listCategories()).rejects.toThrow(UpstreamUnavailableError);
   });
 });
+
+describe('FakeStoreProductSource.getImage (ARCHITECTURE §10.3)', () => {
+  const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+  const imageUrl = `${BASE}/img/backpack.png`;
+
+  it('fetches an image from the configured Fake Store host', async () => {
+    server.use(
+      http.get(imageUrl, () => new HttpResponse(PNG, { headers: { 'content-type': 'image/png' } })),
+    );
+
+    const image = await makeSource().getImage(imageUrl);
+    expect(image?.contentType).toBe('image/png');
+    expect([...(image?.body ?? [])]).toEqual([...PNG]);
+  });
+
+  it.each([
+    ['another host', 'https://evil.example/img/x.png'],
+    ['a subdomain', 'https://evil.fakestore.test/img/x.png'],
+    ['a non-http scheme', 'file:///etc/passwd'],
+    ['not a URL', 'placeholder.svg'],
+  ])('refuses %s without making any request (SSRF)', async (_label, ref) => {
+    // onUnhandledFrame: 'error' fails the test if any request is attempted.
+    const logger = makeLogger();
+    expect(await makeSource(logger).getImage(ref)).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ event: LogEvent.productSourceImageRefused }),
+      expect.any(String),
+    );
+  });
+
+  it('refuses a response that is not an image', async () => {
+    server.use(http.get(imageUrl, () => HttpResponse.text('<script>alert(1)</script>')));
+    expect(await makeSource().getImage(imageUrl)).toBeNull();
+  });
+
+  it('refuses an image over the size cap', async () => {
+    server.use(
+      http.get(
+        imageUrl,
+        () => new HttpResponse(new Uint8Array(64), { headers: { 'content-type': 'image/png' } }),
+      ),
+    );
+    const source = new FakeStoreProductSource({
+      baseUrl: BASE,
+      logger: makeLogger(),
+      maxImageBytes: 32,
+    });
+    expect(await source.getImage(imageUrl)).toBeNull();
+  });
+
+  it('does not follow redirects (could lead to another host)', async () => {
+    server.use(
+      http.get(
+        imageUrl,
+        () =>
+          new HttpResponse(null, {
+            status: 302,
+            headers: { location: 'https://evil.example/x.png' },
+          }),
+      ),
+    );
+    await expect(makeSource().getImage(imageUrl)).rejects.toThrow(UpstreamUnavailableError);
+  });
+
+  it('missing image (404) → null; server error → UpstreamUnavailableError', async () => {
+    server.use(http.get(imageUrl, () => new HttpResponse(null, { status: 404 })));
+    expect(await makeSource().getImage(imageUrl)).toBeNull();
+
+    server.use(http.get(imageUrl, () => new HttpResponse(null, { status: 500 })));
+    await expect(makeSource().getImage(imageUrl)).rejects.toThrow(UpstreamUnavailableError);
+  });
+});

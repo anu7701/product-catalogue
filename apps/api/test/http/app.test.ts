@@ -3,9 +3,9 @@ import type { FastifyInstance } from 'fastify';
 import { FakeStoreProductSource } from '../../src/adapters/fakestore/fakestore-product-source.ts';
 import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
 import { createProductSource } from '../../src/composition.ts';
-import { createLogger } from '../../src/logging/create-logger.ts';
 import { silentLogger } from '../../src/logging/logger.ts';
-import { buildApp } from '../../src/http/app.ts';
+import { untouchableProductSource } from '../helpers/doubles.ts';
+import { buildTestApp } from '../helpers/test-app.ts';
 
 let app: FastifyInstance | undefined;
 
@@ -15,11 +15,7 @@ afterEach(async () => {
 });
 
 async function makeApp() {
-  app = buildApp({
-    logger: createLogger({ level: 'silent' }),
-    productSource: await FixtureProductSource.load(),
-    trustProxyHops: 0,
-  });
+  app = await buildTestApp();
   return app;
 }
 
@@ -32,14 +28,8 @@ describe('buildApp', () => {
   });
 
   it('health does not touch the product source', async () => {
-    app = buildApp({
-      logger: createLogger({ level: 'silent' }),
-      productSource: {
-        listProducts: () => Promise.reject(new Error('should not be called')),
-        getProduct: () => Promise.reject(new Error('should not be called')),
-        listCategories: () => Promise.reject(new Error('should not be called')),
-      },
-      trustProxyHops: 0,
+    app = await buildTestApp({
+      productSource: untouchableProductSource(),
     });
 
     expect((await app.inject({ url: '/api/v1/health' })).statusCode).toBe(200);

@@ -1,4 +1,5 @@
-import { createProductSource } from './composition.ts';
+import { createSmtpTransport, SmtpNotifier } from './adapters/email/smtp-notifier.ts';
+import { createProductSource, createServices } from './composition.ts';
 import { ConfigError, loadConfig } from './config/config.ts';
 import { buildApp } from './http/app.ts';
 import { createLogger } from './logging/create-logger.ts';
@@ -27,10 +28,23 @@ async function main(): Promise<void> {
   }
 
   const productSource = await createProductSource(config.productSource, logger);
+  const notifier = new SmtpNotifier({
+    transport: createSmtpTransport(config.email.smtp),
+    from: config.email.from,
+    salesInbox: config.email.salesInbox,
+  });
+  const services = createServices({
+    productSource,
+    logger,
+    catalogue: config.catalogue,
+    notifier,
+    publicSiteUrl: config.server.publicSiteUrl,
+  });
   const app = buildApp({
     logger,
-    productSource,
+    services,
     trustProxyHops: config.server.trustProxyHops,
+    enquiryRateLimit: config.enquiryRateLimit,
   });
 
   const shutdown = (signal: string) => {

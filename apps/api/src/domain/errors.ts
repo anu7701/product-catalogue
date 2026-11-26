@@ -20,6 +20,16 @@ export class ProductNotFoundError extends DomainError {
   }
 }
 
+/** The product exists but its image can't be served (missing, refused or not an image); the UI shows a placeholder (NEW-06). */
+export class ProductImageNotFoundError extends DomainError {
+  readonly productId: string;
+
+  constructor(productId: string) {
+    super(`Image not available for product: ${productId}`);
+    this.productId = productId;
+  }
+}
+
 /** A category ID matches no category (CAT-02). */
 export class CategoryNotFoundError extends DomainError {
   readonly categoryId: string;

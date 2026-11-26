@@ -1,19 +1,13 @@
 import { ErrorCode } from '@catalogue/shared';
 import type { FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
-import { createLogger } from '../../src/logging/create-logger.ts';
-import { buildApp } from '../../src/http/app.ts';
 import { BODY_LIMIT_BYTES } from '../../src/http/security.ts';
+import { buildTestApp } from '../helpers/test-app.ts';
 
 let app: FastifyInstance;
 
 beforeEach(async () => {
-  app = buildApp({
-    logger: createLogger({ level: 'silent' }),
-    productSource: await FixtureProductSource.load(),
-    trustProxyHops: 0,
-  });
+  app = await buildTestApp();
   app.post('/test/echo', (request) => ({ size: JSON.stringify(request.body).length }));
 });
 
@@ -85,11 +79,7 @@ describe('security baseline (ARCHITECTURE §10.1)', () => {
 
 describe('client IP behind proxies (R-07)', () => {
   async function ipSeenWith(trustProxyHops: number) {
-    const ipApp = buildApp({
-      logger: createLogger({ level: 'silent' }),
-      productSource: await FixtureProductSource.load(),
-      trustProxyHops,
-    });
+    const ipApp = await buildTestApp({ trustProxyHops });
     ipApp.get('/test/ip', (request) => ({ ip: request.ip }));
     // The client forged 6.6.6.6; the one trusted proxy (Nginx) appended the real 203.0.113.7.
     const response = await ipApp.inject({

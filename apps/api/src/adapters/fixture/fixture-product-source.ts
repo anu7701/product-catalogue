@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, dirname, extname, join } from 'node:path';
 import { z } from 'zod';
 import type { CatalogueProduct } from '../../domain/catalogue-product.ts';
+import { MAX_IMAGE_BYTES, type ProductImage } from '../../domain/product-image.ts';
 import type { ProductSource } from '../../ports/product-source.ts';
 
 /** Directory holding the committed snapshot and its images. */
@@ -24,6 +25,15 @@ const snapshotSchema = z
     message: 'product IDs must be unique',
   });
 
+const IMAGE_TYPES: Record<string, string> = {
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+};
+
 /** The committed snapshot is unusable; the API must not start (ARCHITECTURE §7). */
 export class FixtureLoadError extends Error {
   constructor(message: string, options?: ErrorOptions) {
@@ -39,9 +49,11 @@ export class FixtureLoadError extends Error {
  */
 export class FixtureProductSource implements ProductSource {
   private readonly products: readonly CatalogueProduct[];
+  private readonly imagesDir: string;
 
-  private constructor(products: CatalogueProduct[]) {
+  private constructor(products: CatalogueProduct[], imagesDir: string) {
     this.products = products;
+    this.imagesDir = imagesDir;
   }
 
   /** Load and validate the snapshot. Throws FixtureLoadError if it is missing or invalid. */
@@ -59,7 +71,7 @@ export class FixtureProductSource implements ProductSource {
         `Invalid product fixture ${file}: ${z.prettifyError(parsed.error)}`,
       );
     }
-    return new FixtureProductSource(parsed.data);
+    return new FixtureProductSource(parsed.data, join(dirname(file), 'images'));
   }
 
   listProducts(): Promise<CatalogueProduct[]> {
@@ -74,5 +86,23 @@ export class FixtureProductSource implements ProductSource {
   /** Distinct category names, in order of first appearance. */
   listCategories(): Promise<string[]> {
     return Promise.resolve([...new Set(this.products.map((product) => product.categoryName))]);
+  }
+
+  /**
+   * Serve a committed image from the snapshot's `images/` folder. Only a plain
+   * file name with a known image extension is accepted, so a reference can't
+   * reach outside that folder (path traversal).
+   */
+  async getImage(imageRef: string): Promise<ProductImage | null> {
+    const contentType = IMAGE_TYPES[extname(imageRef).toLowerCase()];
+    if (imageRef !== basename(imageRef) || imageRef.startsWith('.') || !contentType) {
+      return null;
+    }
+    try {
+      const body = await readFile(join(this.imagesDir, imageRef));
+      return body.length > MAX_IMAGE_BYTES ? null : { contentType, body };
+    } catch {
+      return null;
+    }
   }
 }
