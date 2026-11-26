@@ -2,19 +2,38 @@
 
 > **Scope:** [DECISIONS.md](../DECISIONS.md), [FUNCTIONAL_SPEC.md](./FUNCTIONAL_SPEC.md), [ARCHITECTURE.md](./ARCHITECTURE.md)
 > **Reviewer stance:** senior architect, before implementation starts
-> **Status:** partially actioned — see resolution log
+> **Status:** closed for the PoC. The critical issues were resolved before the build, or shown not to affect the PoC (R-04, R-05). The remaining issues were deprioritised because this is a proof of concept: several were fixed along the way during the build, the rest are recorded as accepted risks or next steps in [DECISIONS.md](../DECISIONS.md) §9a and §12.
 
 ## Resolution log
 
+**Critical**
+
 | Issue | Outcome |
 |---|---|
-| R-01 | **Resolved** — `FixtureProductSource` added as a second product source (ARCH §3.6, T13). Rewriting data-dependent ACs against the fixture (part of R-19) not done yet. |
-| R-02 | **Resolved differently** — caching removed from the architecture for now (ARCH §3.5, T4), so the cache/spec contradictions no longer apply. Caching is a next step. |
-| R-03 | **Resolved** — `/products?q=` and `/featured-products` (ARCH §6.2, T14). |
-| R-04 | **Deferred** — to be decided later; NEW-21 marked under review. |
-| R-09 | **Partly resolved** — category ID is a deterministic UUID v5 of the source name (T15), so raw names no longer appear in URLs and NEW-23 is revised. Still open: derive categories from products vs a categories endpoint (NEW-22). |
-| R-10 | **Resolved** — DECISIONS.md moved to repo root, NEW-xx merged with status, cut list extended, key technical decisions added. |
-| Others | Open — not yet actioned. |
+| R-01 | **Resolved:** offline `FixtureProductSource` as a second product source (T13); tests and CI use it, so nothing depends on Fake Store being up. |
+| R-02 | **Resolved:** no caching in the PoC (T4), so the cache/spec contradictions no longer apply. Caching is a next step. |
+| R-03 | **Resolved:** `/products?q=` and `/featured-products` (T14); no route shares a level with product IDs. |
+| R-04 | **Doesn't affect the PoC; deferred:** current behaviour built behind one `topRatedLimit()` function. Every category in the data has at least 4 products, so "More in…" always shows and the acceptance criterion passes (see ACCEPTANCE_RESULTS). |
+| R-05 | **Accepted:** the full P0/P1 scope was built rather than cut; the time over the 2–3 h box is recorded in DECISIONS §13. |
+
+**High**
+
+| Issue | Outcome |
+|---|---|
+| R-07 | **Resolved:** trusted proxy hop count instead of `true`; Nginx replaces `X-Forwarded-For`; tested end to end. |
+| R-08 | **Resolved:** remaining ties keep source order, which works for any ID format. |
+| R-09 | **Resolved:** category IDs are deterministic UUID v5 (T15); the category list comes from the source's categories call. |
+| R-10 | **Resolved:** DECISIONS.md at the repo root is the single source of truth. |
+| R-06 | **Deprioritised (PoC):** home heading kept as the spec says ("Top rated"); a product question for the entrepreneur (Q1). |
+
+**Medium and low: deprioritised for the PoC**
+
+| Issue | Outcome |
+|---|---|
+| R-14, R-15, R-17, R-18, R-20, R-25 | **Fixed during the build** (search term checked before calling the API; `/api/` never served the app; rebuild documented for the store name; enquiry POST is the only write endpoint; image proxy limits; README prerequisites; response shapes). |
+| R-11, R-12, R-13, R-16, R-22 | **Deprioritised (PoC), recorded as open** in DECISIONS §9a; all but R-22 are next steps in §12: SES delivery set-up, log hygiene (stale featured IDs, client IPs), shared rate-limit store before scaling out. R-22 (stricter control-character checks) stays an accepted risk. |
+| R-19, R-21, R-23 | **Deprioritised (PoC), accepted:** acceptance tests read expected values from the API instead of fixed data; source category spelling ("Jewelery") kept; no formal browser or performance targets. |
+| R-24 | **No longer applies:** there is no cache to warm. |
 
 ## Severity scale
 
