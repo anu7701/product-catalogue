@@ -1,7 +1,6 @@
 import { ErrorCode, errorMessages, problemDetailsSchema } from '@catalogue/shared';
 import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
-import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
 import {
   CategoryNotFoundError,
   EmailDeliveryFailedError,
@@ -10,9 +9,8 @@ import {
   UpstreamUnavailableError,
   ValidationFailedError,
 } from '../../src/domain/errors.ts';
-import { createLogger } from '../../src/logging/create-logger.ts';
 import { LogEvent } from '../../src/logging/logger.ts';
-import { buildApp } from '../../src/http/app.ts';
+import { buildTestApp, captureLogger } from '../helpers/test-app.ts';
 
 let app: FastifyInstance | undefined;
 let logLines: Record<string, unknown>[] = [];
@@ -25,16 +23,9 @@ afterEach(async () => {
 
 /** App with one test route that throws `error`. */
 async function appThrowing(error: unknown) {
-  app = buildApp({
-    logger: createLogger({
-      level: 'info',
-      destination: {
-        write: (line: string) => logLines.push(JSON.parse(line) as Record<string, unknown>),
-      },
-    }),
-    productSource: await FixtureProductSource.load(),
-    trustProxyHops: 0,
-  });
+  const captured = captureLogger();
+  logLines = captured.lines;
+  app = await buildTestApp({ logger: captured.logger });
   app.get('/test/throw', () => {
     throw error;
   });

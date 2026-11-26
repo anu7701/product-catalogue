@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
-import { buildApp } from '../../src/http/app.ts';
 import { createLogger, REDACTED } from '../../src/logging/create-logger.ts';
 import { LogEvent } from '../../src/logging/logger.ts';
+import { buildTestApp } from '../helpers/test-app.ts';
 
 function capture() {
   const lines: Record<string, unknown>[] = [];
@@ -72,11 +71,7 @@ describe('createLogger', () => {
 
   it('request log lines carry the request ID returned to the client', async () => {
     const { logger, lines } = capture();
-    const app = buildApp({
-      logger,
-      productSource: await FixtureProductSource.load(),
-      trustProxyHops: 0,
-    });
+    const app = await buildTestApp({ logger });
 
     const response = await app.inject({ url: '/api/v1/health' });
     await app.close();

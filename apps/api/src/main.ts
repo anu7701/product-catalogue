@@ -1,4 +1,4 @@
-import { createProductSource } from './composition.ts';
+import { createProductSource, createServices } from './composition.ts';
 import { ConfigError, loadConfig } from './config/config.ts';
 import { buildApp } from './http/app.ts';
 import { createLogger } from './logging/create-logger.ts';
@@ -27,11 +27,8 @@ async function main(): Promise<void> {
   }
 
   const productSource = await createProductSource(config.productSource, logger);
-  const app = buildApp({
-    logger,
-    productSource,
-    trustProxyHops: config.server.trustProxyHops,
-  });
+  const services = createServices({ productSource, logger, catalogue: config.catalogue });
+  const app = buildApp({ logger, services, trustProxyHops: config.server.trustProxyHops });
 
   const shutdown = (signal: string) => {
     logger.info({ signal }, 'Shutting down');

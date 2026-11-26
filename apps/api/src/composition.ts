@@ -3,6 +3,7 @@ import { FixtureProductSource } from './adapters/fixture/fixture-product-source.
 import type { Config } from './config/config.ts';
 import type { Logger } from './logging/logger.ts';
 import type { ProductSource } from './ports/product-source.ts';
+import { CatalogueService } from './services/catalogue-service.ts';
 
 /**
  * The only place that reads PRODUCT_SOURCE and knows which adapters exist
@@ -18,4 +19,26 @@ export async function createProductSource(
     case 'fakestore':
       return new FakeStoreProductSource({ baseUrl: config.url, logger });
   }
+}
+
+/** Every service the HTTP layer uses. */
+export interface Services {
+  catalogue: CatalogueService;
+}
+
+export interface ServiceDependencies {
+  productSource: ProductSource;
+  logger: Logger;
+  catalogue: Config['catalogue'];
+}
+
+/** Wires services to their ports. Used by main.ts and by tests, so both run the same wiring. */
+export function createServices(deps: ServiceDependencies): Services {
+  return {
+    catalogue: new CatalogueService({
+      productSource: deps.productSource,
+      logger: deps.logger,
+      featuredProductIds: deps.catalogue.featuredProductIds,
+    }),
+  };
 }
