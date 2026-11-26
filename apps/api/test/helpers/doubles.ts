@@ -12,8 +12,17 @@ export function spyLogger() {
 /** A ProductSource that is down: every call fails like an unreachable upstream. */
 export function failingProductSource(): ProductSource {
   const fail = () => Promise.reject(new UpstreamUnavailableError('source down'));
-  return { listProducts: fail, getProduct: fail, listCategories: fail };
+  return { listProducts: fail, getProduct: fail, listCategories: fail, getImage: fail };
 }
+
+/** A ProductSource that fails the test if anything calls it. */
+export function untouchableProductSource(): ProductSource {
+  const fail = () => Promise.reject(new Error('the product source should not be called'));
+  return { listProducts: fail, getProduct: fail, listCategories: fail, getImage: fail };
+}
+
+/** Bytes served by inMemoryProductSource for any imageRef ending in `.png`. */
+export const FAKE_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 /** An in-memory ProductSource over the given products, in the given order. */
 export function inMemoryProductSource(products: CatalogueProduct[]): ProductSource {
@@ -22,6 +31,10 @@ export function inMemoryProductSource(products: CatalogueProduct[]): ProductSour
     getProduct: (id) => Promise.resolve(products.find((product) => product.id === id) ?? null),
     listCategories: () =>
       Promise.resolve([...new Set(products.map((product) => product.categoryName))]),
+    getImage: (imageRef) =>
+      Promise.resolve(
+        imageRef.endsWith('.png') ? { contentType: 'image/png', body: FAKE_PNG } : null,
+      ),
   };
 }
 

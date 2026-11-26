@@ -171,7 +171,7 @@ Our own `Product` type (`id`, `title`, `price`, `description`, `category`, `imag
 
 | Port | Operations | PoC adapter | Future adapters |
 |---|---|---|---|
-| `ProductSource` | list all products, get by id, list categories | `FakeStoreProductSource` (default) · `FixtureProductSource` (offline / tests) | Database, headless CMS, Shopify, internal PIM |
+| `ProductSource` | list all products, get by id, list categories, get image (by the product's opaque image reference; each adapter enforces its own safety rules, §10.3) | `FakeStoreProductSource` (default) · `FixtureProductSource` (offline / tests) | Database, headless CMS, Shopify, internal PIM |
 | `Notifier` | send enquiry notification | `SmtpNotifier` (Mailpit / SES SMTP) | SES API, SendGrid, Slack/CRM webhook |
 | `EnquiryRecorder` | record enquiry | `NoopEnquiryRecorder` (A34) | Postgres + outbox (next step #1) |
 

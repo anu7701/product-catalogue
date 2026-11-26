@@ -19,4 +19,10 @@ export function productRoutes(app: FastifyInstance, deps: ProductRouteDeps): voi
   app.get<{ Params: { id: string } }>('/api/v1/products/:id', (request): Promise<ProductResponse> =>
     deps.catalogue.product(request.params.id),
   );
+
+  // Image proxy: the browser never contacts the data source (constraint 2).
+  app.get<{ Params: { id: string } }>('/api/v1/products/:id/image', async (request, reply) => {
+    const image = await deps.catalogue.productImage(request.params.id);
+    return reply.type(image.contentType).send(image.body);
+  });
 }

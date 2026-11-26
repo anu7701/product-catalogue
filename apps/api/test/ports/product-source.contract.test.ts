@@ -14,7 +14,9 @@ import type { ProductSource } from '../../src/ports/product-source.ts';
  * source is configured. To add a source, add an entry to `adapters`.
  */
 
-const FAKESTORE = 'https://fakestore.test';
+// The real host, so recorded image URLs pass the adapter's host allow-list.
+// MSW intercepts everything; no request reaches the network.
+const FAKESTORE = 'https://fakestoreapi.com';
 
 // Fake Store, replaying responses recorded from the live API.
 const server = setupServer(
@@ -25,6 +27,13 @@ const server = setupServer(
     // Real Fake Store behaviour for unknown IDs: 200 with an empty body.
     return product ? HttpResponse.json(product) : new HttpResponse('');
   }),
+  http.get(
+    `${FAKESTORE}/img/:file`,
+    () =>
+      new HttpResponse(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), {
+        headers: { 'content-type': 'image/png' },
+      }),
+  ),
 );
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterAll(() => server.close());
@@ -89,5 +98,18 @@ describe.each(adapters)('ProductSource contract: %s', (_name, create) => {
     expect(categories.length).toBeGreaterThan(0);
     expect(new Set(categories).size).toBe(categories.length);
     expect(new Set(categories)).toEqual(usedByProducts);
+  });
+
+  it("serves a listed product's image as image/*", async () => {
+    const [product] = await source.listProducts();
+    if (!product) throw new Error('source has no products');
+
+    const image = await source.getImage(product.imageRef);
+    expect(image?.contentType).toMatch(/^image\//);
+    expect(image?.body.length).toBeGreaterThan(0);
+  });
+
+  it('an unusable image reference resolves to null, not an error', async () => {
+    expect(await source.getImage('../../etc/passwd')).toBeNull();
   });
 });

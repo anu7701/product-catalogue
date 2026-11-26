@@ -2,7 +2,11 @@ import type { CategoryProductsResponse } from '@catalogue/shared';
 import { describe, expect, it } from 'vitest';
 import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
 import type { CatalogueProduct } from '../../src/domain/catalogue-product.ts';
-import { CategoryNotFoundError, ProductNotFoundError } from '../../src/domain/errors.ts';
+import {
+  CategoryNotFoundError,
+  ProductImageNotFoundError,
+  ProductNotFoundError,
+} from '../../src/domain/errors.ts';
 import { LogEvent } from '../../src/logging/logger.ts';
 import type { ProductSource } from '../../src/ports/product-source.ts';
 import { categoryId } from '../../src/services/category.ts';
@@ -11,7 +15,13 @@ import {
   rankByRating,
   topRatedLimit,
 } from '../../src/services/catalogue-service.ts';
-import { aProduct, inMemoryProductSource, spyLogger } from '../helpers/doubles.ts';
+import {
+  aProduct,
+  FAKE_PNG,
+  inMemoryProductSource,
+  spyLogger,
+  untouchableProductSource,
+} from '../helpers/doubles.ts';
 
 async function serviceWith(featuredProductIds: string[]) {
   const logger = spyLogger();
@@ -73,11 +83,7 @@ describe('CatalogueService.featured', () => {
 
   it('CFG-01 BR7: nothing configured → empty list without calling the source', async () => {
     const service = new CatalogueService({
-      productSource: {
-        listProducts: () => Promise.reject(new Error('should not be called')),
-        getProduct: () => Promise.reject(new Error('should not be called')),
-        listCategories: () => Promise.reject(new Error('should not be called')),
-      },
+      productSource: untouchableProductSource(),
       logger: spyLogger(),
       featuredProductIds: [],
       categoryTopRatedCount: 3,
@@ -210,6 +216,7 @@ describe('CatalogueService.categoryPage', () => {
       listProducts: () => Promise.resolve([]),
       getProduct: () => Promise.resolve(null),
       listCategories: () => Promise.resolve(['empty']),
+      getImage: () => Promise.resolve(null),
     };
     expect(await serviceOver(source).categoryPage(categoryId('empty'))).toEqual({
       category: { id: categoryId('empty'), name: 'Empty' },
@@ -254,4 +261,26 @@ describe('CatalogueService.product', () => {
       await expect((await fixtureService()).product(id)).rejects.toThrow(ProductNotFoundError);
     },
   );
+});
+
+describe('CatalogueService.productImage', () => {
+  it("returns the product's image, looked up by product ID", async () => {
+    const products = [aProduct({ id: 'lamp', imageRef: 'lamp.png' })];
+    const image = await serviceOver(inMemoryProductSource(products)).productImage('lamp');
+
+    expect(image).toEqual({ contentType: 'image/png', body: FAKE_PNG });
+  });
+
+  it('unknown product → ProductNotFoundError', async () => {
+    await expect(serviceOver(inMemoryProductSource([])).productImage('x')).rejects.toThrow(
+      ProductNotFoundError,
+    );
+  });
+
+  it('NEW-06: product exists but its image is unavailable → ProductImageNotFoundError', async () => {
+    const products = [aProduct({ id: 'lamp', imageRef: 'lamp.unknown' })];
+    await expect(serviceOver(inMemoryProductSource(products)).productImage('lamp')).rejects.toThrow(
+      ProductImageNotFoundError,
+    );
+  });
 });

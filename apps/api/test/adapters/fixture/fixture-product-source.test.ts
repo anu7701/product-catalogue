@@ -90,3 +90,21 @@ describe('FixtureProductSource', () => {
     });
   });
 });
+
+describe('FixtureProductSource.getImage', () => {
+  it('serves the committed placeholder SVG', async () => {
+    const image = await (await FixtureProductSource.load()).getImage('placeholder.svg');
+    expect(image?.contentType).toBe('image/svg+xml');
+    expect(image?.body.toString('utf8')).toContain('<svg');
+  });
+
+  it.each([
+    ['path traversal', '../products.json'],
+    ['an absolute path', '/etc/passwd'],
+    ['a hidden file', '.env'],
+    ['a non-image extension', 'products.json'],
+    ['a missing file', 'missing.png'],
+  ])('refuses %s', async (_label, ref) => {
+    expect(await (await FixtureProductSource.load()).getImage(ref)).toBeNull();
+  });
+});

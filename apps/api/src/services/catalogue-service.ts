@@ -1,6 +1,11 @@
 import type { Category, CategoryProductsResponse, Product } from '@catalogue/shared';
 import type { CatalogueProduct } from '../domain/catalogue-product.ts';
-import { CategoryNotFoundError, ProductNotFoundError } from '../domain/errors.ts';
+import {
+  CategoryNotFoundError,
+  ProductImageNotFoundError,
+  ProductNotFoundError,
+} from '../domain/errors.ts';
+import type { ProductImage } from '../domain/product-image.ts';
 import { LogEvent, type Logger } from '../logging/logger.ts';
 import type { ProductSource } from '../ports/product-source.ts';
 import { categoryId, isSameCategoryId, toCategory } from './category.ts';
@@ -123,5 +128,22 @@ export class CatalogueService {
       throw new ProductNotFoundError(id);
     }
     return toApiProduct(product);
+  }
+
+  /**
+   * A product's image for the proxy (ARCHITECTURE §10.3). Looked up by
+   * product ID only, never by a URL from the request (SSRF). Unknown product →
+   * ProductNotFoundError; image unavailable → ProductImageNotFoundError.
+   */
+  async productImage(id: string): Promise<ProductImage> {
+    const product = await this.productSource.getProduct(id);
+    if (!product) {
+      throw new ProductNotFoundError(id);
+    }
+    const image = await this.productSource.getImage(product.imageRef);
+    if (!image) {
+      throw new ProductImageNotFoundError(id);
+    }
+    return image;
   }
 }

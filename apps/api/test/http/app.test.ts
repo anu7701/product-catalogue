@@ -4,6 +4,7 @@ import { FakeStoreProductSource } from '../../src/adapters/fakestore/fakestore-p
 import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
 import { createProductSource } from '../../src/composition.ts';
 import { silentLogger } from '../../src/logging/logger.ts';
+import { untouchableProductSource } from '../helpers/doubles.ts';
 import { buildTestApp } from '../helpers/test-app.ts';
 
 let app: FastifyInstance | undefined;
@@ -28,11 +29,7 @@ describe('buildApp', () => {
 
   it('health does not touch the product source', async () => {
     app = await buildTestApp({
-      productSource: {
-        listProducts: () => Promise.reject(new Error('should not be called')),
-        getProduct: () => Promise.reject(new Error('should not be called')),
-        listCategories: () => Promise.reject(new Error('should not be called')),
-      },
+      productSource: untouchableProductSource(),
     });
 
     expect((await app.inject({ url: '/api/v1/health' })).statusCode).toBe(200);

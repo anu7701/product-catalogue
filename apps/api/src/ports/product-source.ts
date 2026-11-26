@@ -1,4 +1,5 @@
 import type { CatalogueProduct } from '../domain/catalogue-product.ts';
+import type { ProductImage } from '../domain/product-image.ts';
 
 /**
  * Where product data comes from (ARCHITECTURE §3.3). Fake Store and the
@@ -15,4 +16,10 @@ export interface ProductSource {
   getProduct(id: string): Promise<CatalogueProduct | null>;
   /** Category names as the source provides them. */
   listCategories(): Promise<string[]>;
+  /**
+   * The image for a product's `imageRef` (only meaningful to this adapter).
+   * `null` when it can't be served: unknown, refused for safety, not an
+   * image, or too large. Never fetches anything the adapter doesn't trust.
+   */
+  getImage(imageRef: string): Promise<ProductImage | null>;
 }

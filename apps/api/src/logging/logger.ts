@@ -15,6 +15,7 @@ export const LogEvent = {
   configFeaturedNormalised: 'config.featured_normalised',
   productSourceFailed: 'product_source.failed',
   productSourceRecordInvalid: 'product_source.record_invalid',
+  productSourceImageRefused: 'product_source.image_refused',
   enquirySent: 'enquiry.sent',
   enquiryFailed: 'enquiry.failed',
   enquiryRateLimited: 'enquiry.rate_limited',
