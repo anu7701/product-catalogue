@@ -1,5 +1,6 @@
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify';
 import type { ProductSource } from '../ports/product-source.ts';
+import { generateRequestId, registerErrorHandling } from './errors.ts';
 import { healthRoutes } from './routes/health.ts';
 
 export interface AppDependencies {
@@ -19,8 +20,12 @@ export function buildApp(deps: AppDependencies): FastifyInstance {
     // Trust only the configured number of proxy hops nearest the API, so a
     // client can't choose its own IP via X-Forwarded-For (R-07).
     trustProxy: (_address: string, hop: number) => hop < deps.trustProxyHops,
+    // Request IDs: reuse a safe incoming X-Request-Id, else generate one.
+    requestIdHeader: false,
+    genReqId: generateRequestId,
   });
 
+  registerErrorHandling(app);
   healthRoutes(app);
 
   return app;

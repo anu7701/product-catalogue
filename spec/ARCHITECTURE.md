@@ -345,6 +345,7 @@ Validate at **every trust boundary**, using Zod schemas defined once.
 | Code | HTTP | Cause | Customer sees (spec) |
 |---|---|---|---|
 | `VALIDATION_FAILED` | 400 | Bad params/body; includes `errors: {field: message}` | Field messages (ENQ-02) / "Enter a search term" |
+| `NOT_FOUND` | 404 | Unknown API path (never the SPA's HTML, R-14) | "Page not found." |
 | `PRODUCT_NOT_FOUND` | 404 | Unknown/stale product id | PRD-02 |
 | `CATEGORY_NOT_FOUND` | 404 | Unknown category | CAT-02 |
 | `PRODUCT_UNAVAILABLE` | 422 | Enquiry for product no longer in catalogue | "Sorry, this product is no longer available." (NEW-36) |
@@ -352,6 +353,8 @@ Validate at **every trust boundary**, using Zod schemas defined once.
 | `PRODUCT_SOURCE_UNAVAILABLE` | 502 | Data source timeout/error | Error state + Try again (GLB-03) |
 | `EMAIL_DELIVERY_FAILED` | 502 | SMTP/provider failure | ENQ-05 message |
 | `INTERNAL_ERROR` | 500 | Anything unexpected | Generic error state |
+
+Codes, the Problem Details schema and the customer-facing message for every code live in `packages/shared` (`errors.ts`), so the API and web app use identical wording.
 
 ### 8.2 Principles
 

@@ -53,3 +53,13 @@ export class EmailDeliveryFailedError extends DomainError {
     super(message, options);
   }
 }
+
+/** Input failed validation; `fieldErrors` maps each field to a customer-facing message (ENQ-02, SRC-01). */
+export class ValidationFailedError extends DomainError {
+  readonly fieldErrors: Record<string, string>;
+
+  constructor(fieldErrors: Record<string, string>) {
+    super(`Validation failed: ${Object.keys(fieldErrors).join(', ')}`);
+    this.fieldErrors = fieldErrors;
+  }
+}
