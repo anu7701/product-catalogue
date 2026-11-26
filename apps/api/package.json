@@ -4,11 +4,17 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@catalogue/shared": "*"
+    "@catalogue/shared": "*",
+    "@fastify/helmet": "^13.2.0",
+    "fastify": "^5.12.8",
+    "zod": "^4.6.7"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "msw": "^3.0.8"
   }
 }
