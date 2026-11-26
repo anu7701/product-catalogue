@@ -8,8 +8,8 @@ describe('routes (GLB-04)', () => {
     ['/', 'Home'],
     [`/category/${electronics.id}`, 'Electronics'],
     ['/search?q=bag', 'Results for “bag”'],
-    ['/product/1', 'Product'],
-    ['/product/1/', 'Product'], // NEW-13: trailing slash is the same page
+    ['/product/1', 'Backpack'],
+    ['/product/1/', 'Backpack'], // NEW-13: trailing slash is the same page
     ['/does-not-exist', 'Page not found'],
     ['/product', 'Page not found'],
   ])('%s renders the %s page inside the layout', async (url, heading) => {
