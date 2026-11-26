@@ -1,0 +1,17 @@
+.section + .section {
+  margin-top: var(--space-8);
+}
+
+.heading {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-lg);
+}
+
+.title {
+  margin: 0 0 var(--space-6);
+  font-size: var(--font-size-xl);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
