@@ -2,6 +2,8 @@ import { vi } from 'vitest';
 import type { CatalogueProduct } from '../../src/domain/catalogue-product.ts';
 import { UpstreamUnavailableError } from '../../src/domain/errors.ts';
 import type { Logger } from '../../src/logging/logger.ts';
+import type { EnquiryRecorder } from '../../src/ports/enquiry-recorder.ts';
+import type { EnquiryNotification, Notifier } from '../../src/ports/notifier.ts';
 import type { ProductSource } from '../../src/ports/product-source.ts';
 
 /** Logger whose calls can be asserted. */
@@ -53,4 +55,38 @@ export function aProduct(overrides: Partial<CatalogueProduct> = {}): CataloguePr
     rating: { average: 3, count: 10 },
     ...overrides,
   };
+}
+
+/** A Notifier that records what it was asked to send, or fails on demand. */
+export class RecordingNotifier implements Notifier {
+  readonly sent: EnquiryNotification[] = [];
+  failWith: Error | undefined;
+  private readonly calls: string[];
+
+  constructor(calls: string[] = []) {
+    this.calls = calls;
+  }
+
+  sendEnquiry(enquiry: EnquiryNotification): Promise<void> {
+    this.calls.push('notify');
+    if (this.failWith) return Promise.reject(this.failWith);
+    this.sent.push(enquiry);
+    return Promise.resolve();
+  }
+}
+
+/** An EnquiryRecorder that records calls, so ordering can be asserted. */
+export class RecordingRecorder implements EnquiryRecorder {
+  readonly recorded: EnquiryNotification[] = [];
+  private readonly calls: string[];
+
+  constructor(calls: string[] = []) {
+    this.calls = calls;
+  }
+
+  record(enquiry: EnquiryNotification): Promise<void> {
+    this.calls.push('record');
+    this.recorded.push(enquiry);
+    return Promise.resolve();
+  }
 }
