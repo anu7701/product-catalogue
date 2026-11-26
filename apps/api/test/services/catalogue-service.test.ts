@@ -2,7 +2,8 @@ import type { CategoryProductsResponse } from '@catalogue/shared';
 import { describe, expect, it } from 'vitest';
 import { FixtureProductSource } from '../../src/adapters/fixture/fixture-product-source.ts';
 import type { CatalogueProduct } from '../../src/domain/catalogue-product.ts';
-import { CategoryNotFoundError } from '../../src/domain/errors.ts';
+import { CategoryNotFoundError, ProductNotFoundError } from '../../src/domain/errors.ts';
+import { LogEvent } from '../../src/logging/logger.ts';
 import type { ProductSource } from '../../src/ports/product-source.ts';
 import { categoryId } from '../../src/services/category.ts';
 import {
@@ -11,6 +12,80 @@ import {
   topRatedLimit,
 } from '../../src/services/catalogue-service.ts';
 import { aProduct, inMemoryProductSource, spyLogger } from '../helpers/doubles.ts';
+
+async function serviceWith(featuredProductIds: string[]) {
+  const logger = spyLogger();
+  const service = new CatalogueService({
+    productSource: await FixtureProductSource.load(),
+    logger,
+    featuredProductIds,
+    categoryTopRatedCount: 3,
+  });
+  return { service, logger };
+}
+
+describe('CatalogueService.featured', () => {
+  it('HOM-01 / A3: returns the configured products in configured order', async () => {
+    const { service } = await serviceWith(['3', '7', '12', '1', '18']);
+
+    expect((await service.featured()).map((product) => product.id)).toEqual([
+      '3',
+      '7',
+      '12',
+      '1',
+      '18',
+    ]);
+  });
+
+  it('HOM-01: maps to the API product shape (category ID + label, proxied image)', async () => {
+    const { service } = await serviceWith(['1']);
+
+    expect(await service.featured()).toEqual([
+      {
+        id: '1',
+        title: 'Fjallraven - Foldsack No. 1 Backpack, Fits 15 Laptops',
+        price: 109.95,
+        description: expect.any(String) as string,
+        category: { id: categoryId("men's clothing"), name: "Men's clothing" },
+        imageUrl: '/api/v1/products/1/image',
+        rating: { average: 3.9, count: 120 },
+      },
+    ]);
+  });
+
+  it('A4: a stale ID is skipped (never replaced) and a warning names it', async () => {
+    const { service, logger } = await serviceWith(['3', '7', '12', '1', '999']);
+
+    expect((await service.featured()).map((product) => product.id)).toEqual(['3', '7', '12', '1']);
+    expect(logger.warn).toHaveBeenCalledOnce();
+    expect(logger.warn).toHaveBeenCalledWith(
+      { event: LogEvent.featuredIdMissing, productId: '999' },
+      expect.any(String),
+    );
+  });
+
+  it('NEW-17: all IDs stale → empty list, one warning each', async () => {
+    const { service, logger } = await serviceWith(['997', '998', '999']);
+
+    expect(await service.featured()).toEqual([]);
+    expect(logger.warn).toHaveBeenCalledTimes(3);
+  });
+
+  it('CFG-01 BR7: nothing configured → empty list without calling the source', async () => {
+    const service = new CatalogueService({
+      productSource: {
+        listProducts: () => Promise.reject(new Error('should not be called')),
+        getProduct: () => Promise.reject(new Error('should not be called')),
+        listCategories: () => Promise.reject(new Error('should not be called')),
+      },
+      logger: spyLogger(),
+      featuredProductIds: [],
+      categoryTopRatedCount: 3,
+    });
+
+    expect(await service.featured()).toEqual([]);
+  });
+});
 
 function serviceOver(productSource: ProductSource, categoryTopRatedCount = 3) {
   return new CatalogueService({
@@ -159,4 +234,24 @@ describe('ranking rules', () => {
     expect(topRatedLimit(6, 3)).toBe(3);
     expect(topRatedLimit(2, 3)).toBe(3);
   });
+});
+
+describe('CatalogueService.product', () => {
+  it('PRD-01: returns the API product for a known ID', async () => {
+    const product = await (await fixtureService()).product('1');
+    expect(product).toMatchObject({
+      id: '1',
+      price: 109.95,
+      category: { id: categoryId("men's clothing"), name: "Men's clothing" },
+      imageUrl: '/api/v1/products/1/image',
+      rating: { average: 3.9, count: 120 },
+    });
+  });
+
+  it.each(['999', 'abc', 'SKU-1042'])(
+    'PRD-02: unknown ID %j → ProductNotFoundError',
+    async (id) => {
+      await expect((await fixtureService()).product(id)).rejects.toThrow(ProductNotFoundError);
+    },
+  );
 });

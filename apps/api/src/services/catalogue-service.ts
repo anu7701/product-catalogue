@@ -1,6 +1,6 @@
 import type { Category, CategoryProductsResponse, Product } from '@catalogue/shared';
 import type { CatalogueProduct } from '../domain/catalogue-product.ts';
-import { CategoryNotFoundError } from '../domain/errors.ts';
+import { CategoryNotFoundError, ProductNotFoundError } from '../domain/errors.ts';
 import { LogEvent, type Logger } from '../logging/logger.ts';
 import type { ProductSource } from '../ports/product-source.ts';
 import { categoryId, isSameCategoryId, toCategory } from './category.ts';
@@ -114,5 +114,14 @@ export class CatalogueService {
       topRated: topRated.map(toApiProduct),
       more: inCategory.filter((product) => !topRatedIds.has(product.id)).map(toApiProduct),
     };
+  }
+
+  /** One product by ID (PRD-01). Unknown or stale ID → ProductNotFoundError (PRD-02, A4a). */
+  async product(id: string): Promise<Product> {
+    const product = await this.productSource.getProduct(id);
+    if (!product) {
+      throw new ProductNotFoundError(id);
+    }
+    return toApiProduct(product);
   }
 }

@@ -1,4 +1,9 @@
-import { ErrorCode, type SearchResponse, searchMessages } from '@catalogue/shared';
+import {
+  ErrorCode,
+  type ProductResponse,
+  type SearchResponse,
+  searchMessages,
+} from '@catalogue/shared';
 import { describe, expect, it } from 'vitest';
 import { failingProductSource } from '../../helpers/doubles.ts';
 import { expectProblem, expectSourceUnavailable, get } from '../../helpers/http.ts';
@@ -35,6 +40,32 @@ describe('GET /api/v1/products?q=', () => {
   it('GLB-03: product source down → 502, never "no results"', async () => {
     expectSourceUnavailable(
       await get('/api/v1/products?q=bag', { productSource: failingProductSource() }),
+    );
+  });
+});
+
+describe('GET /api/v1/products/{id}', () => {
+  it('PRD-01: 200 with the product', async () => {
+    const response = await get('/api/v1/products/9');
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json<ProductResponse>()).toMatchObject({
+      id: '9',
+      category: { name: 'Electronics' },
+      imageUrl: '/api/v1/products/9/image',
+    });
+  });
+
+  it.each(['999', 'abc', 'SKU-1042', 'featured', 'search'])(
+    'PRD-02 / T14: unknown ID %j → 404 PRODUCT_NOT_FOUND',
+    async (id) => {
+      expectProblem(await get(`/api/v1/products/${id}`), 404, ErrorCode.PRODUCT_NOT_FOUND);
+    },
+  );
+
+  it('PRD-02: source down → 502, never "product not found"', async () => {
+    expectSourceUnavailable(
+      await get('/api/v1/products/1', { productSource: failingProductSource() }),
     );
   });
 });
