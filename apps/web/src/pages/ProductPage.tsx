@@ -5,6 +5,7 @@ import { QueryView } from '../components/PageState.tsx';
 import { CategoryLinks } from '../features/catalogue/CategoryLinks.tsx';
 import { ProductDetails } from '../features/catalogue/ProductDetails.tsx';
 import { useProduct } from '../features/catalogue/queries.ts';
+import { EnquiryPanel } from '../features/enquiry/EnquiryPanel.tsx';
 
 /**
  * Product page (PRD-01). Unknown or stale ID → not-found with ways back into
@@ -28,7 +29,13 @@ export function ProductPage() {
         </NotFoundView>
       }
     >
-      {(product) => <ProductDetails product={product} />}
+      {(product) => (
+        <ProductDetails
+          product={product}
+          // A new product starts a fresh enquiry (ENQ-01 BR1, NEW-30).
+          actions={<EnquiryPanel key={product.id} product={product} />}
+        />
+      )}
     </QueryView>
   );
 }

@@ -1,0 +1,112 @@
+.enquire,
+.send {
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-6);
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.enquire:hover,
+.send:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.send:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.cancel {
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  color: var(--color-primary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.panel {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.heading {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-lg);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-weight: 600;
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.input {
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.fieldError {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+}
+
+.counter {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.banner {
+  margin: 0;
+  padding: var(--space-3);
+  color: var(--color-error);
+  background: var(--color-bg);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.thanks {
+  padding: var(--space-4);
+  color: var(--color-success);
+  background: var(--color-bg);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius);
+}
