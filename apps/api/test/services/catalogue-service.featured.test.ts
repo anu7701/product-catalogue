@@ -11,6 +11,7 @@ async function serviceWith(featuredProductIds: string[]) {
     productSource: await FixtureProductSource.load(),
     logger,
     featuredProductIds,
+    categoryTopRatedCount: 3,
   });
   return { service, logger };
 }
@@ -71,6 +72,7 @@ describe('CatalogueService.featured', () => {
       },
       logger: spyLogger(),
       featuredProductIds: [],
+      categoryTopRatedCount: 3,
     });
 
     expect(await service.featured()).toEqual([]);

@@ -146,7 +146,7 @@ Introduced while writing the functional spec to make rules specific enough to bu
 | NEW-16 | Contrast meets WCAG 2.1 AA. | Concrete, testable version of A44. | Accepted |
 | NEW-17 | No featured products available → featured section hidden; app still runs. | Home page must still work. | Accepted |
 | NEW-18 | Partial data failure hides only the affected section/product. | Show what we can. | Accepted |
-| NEW-19 | Final tie-break in category top rated: lower product ID first. | Deterministic order for testing. | **Under review** — conflicts with opaque string IDs (R-08) |
+| NEW-19 | Final tie-break in category top rated: lower product ID first. | Deterministic order for testing. | **Under review** — conflicts with opaque string IDs (R-08). **Implemented meanwhile:** remaining ties keep data source order (stable sort), which works for any ID format |
 | NEW-20 | Non-ranked lists (category "More in…", search results) use data source order. | No ordering requirement; simplest. | Accepted |
 | NEW-21 | Category with ≤ 3 products: all in top rated, "More in…" hidden. | Avoids an empty section. | **Under review** — can fail the category AC (R-04), decision deferred |
 | NEW-22 | Existing category with 0 products → empty-state message. | Possible after data source changes. | **Under review** — may be unreachable (R-09) |

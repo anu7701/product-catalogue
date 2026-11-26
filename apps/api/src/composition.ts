@@ -39,6 +39,7 @@ export function createServices(deps: ServiceDependencies): Services {
       productSource: deps.productSource,
       logger: deps.logger,
       featuredProductIds: deps.catalogue.featuredProductIds,
+      categoryTopRatedCount: deps.catalogue.categoryTopRatedCount,
     }),
   };
 }
